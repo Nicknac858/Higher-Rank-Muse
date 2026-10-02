@@ -1,0 +1,1695 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#07152f" />
+  <meta name="description" content="Higher Rank helps businesses, creators, and ambitious brands turn ideas into clear growth plans and practical execution." />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <title>Higher Rank</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #07142d;
+      --bg-elevated: #0a1b39;
+      --surface: rgba(17,48,91,.72);
+      --surface-strong: rgba(10,31,67,.94);
+      --surface-dark: #06152f;
+      --text: #f5f9ff;
+      --muted: #b7c8e4;
+      --line: rgba(137,194,255,.17);
+      --line-strong: rgba(46,124,246,.58);
+      --emerald: #2e7cf6;
+      --emerald-bright: #48a8ff;
+      --mint: #c9efff;
+      --glow: rgba(46,124,246,.28);
+      --shadow: 0 24px 70px rgba(0,7,24,.34);
+      --max: 1180px;
+      --nav-h: 72px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #020817;
+        --bg-elevated: #06132d;
+        --surface: rgba(8,29,64,.74);
+        --surface-strong: rgba(7,24,56,.95);
+        --surface-dark: #04132c;
+        --text: #f6f9ff;
+        --muted: #b2c4e2;
+        --line: rgba(126,190,255,.16);
+        --line-strong: rgba(52,139,255,.55);
+        --emerald: #2e7cf6;
+        --emerald-bright: #53b7ff;
+        --mint: #c8efff;
+        --glow: rgba(46,124,246,.3);
+        --shadow: 0 28px 90px rgba(0,5,20,.48);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 22px); }
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      opacity: .22;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: linear-gradient(to bottom, black, transparent 68%);
+    }
+    a { color: inherit; }
+    button, input, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    ::selection { background: var(--emerald); color: #00160d; }
+    .skip { position: fixed; top: -100px; left: 16px; z-index: 100; background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 8px; }
+    .skip:focus { top: 12px; }
+    .wrap { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
+    .section { position: relative; padding: 112px 0; }
+    .section-head { max-width: 780px; margin-bottom: 48px; }
+    .eyebrow { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--emerald); font: 600 12px/1.2 "Inter",sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 32px; height: 1px; background: currentColor; box-shadow: 0 0 12px currentColor; }
+    h1, h2, h3 { font-family: "Space Grotesk", sans-serif; margin: 0; letter-spacing: -.035em; }
+    h1 { font-size: clamp(3.2rem, 8vw, 7.3rem); line-height: .93; max-width: 1080px; }
+    h2 { font-size: clamp(2.25rem, 5vw, 4.6rem); line-height: 1.02; }
+    h3 { font-size: 1.35rem; line-height: 1.15; }
+    p { margin: 0; }
+    .lede { color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.25rem); max-width: 760px; }
+    .accent { color: var(--emerald); }
+
+    .nav-shell { position: fixed; z-index: 50; top: 12px; left: 0; right: 0; padding: 0 20px; }
+    .nav { width: min(100%, 1120px); min-height: var(--nav-h); margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 10px 12px 10px 20px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(18px) saturate(140%); box-shadow: 0 12px 40px rgba(0,0,0,.1); }
+    .nav-context { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+    .brand-mark { position:relative; flex:0 0 auto; width:34px; height:34px; display:grid; place-items:center; border:1px solid var(--line-strong); border-radius:50%; color:var(--emerald-bright); background:rgba(38,217,143,.07); box-shadow:inset 0 0 18px rgba(38,217,143,.08),0 0 24px rgba(38,217,143,.08); }
+    .brand-mark svg { width:21px; height:21px; overflow:visible; }
+    .brand-mark::after { content:""; position:absolute; width:4px; height:4px; right:0; top:3px; border-radius:50%; background:var(--emerald-bright); box-shadow:0 0 10px var(--emerald-bright); }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { text-decoration: none; color: var(--muted); font-size: .86rem; font-weight: 600; padding: 10px 11px; border-radius: 8px; transition: color .2s, background .2s; }
+    .nav-links a:hover, .nav-links a:focus-visible { color: var(--text); background: var(--surface); outline: none; }
+    .nav-links .nav-cta { color: #00170e; background: var(--emerald-bright); padding-inline: 16px; }
+    .nav-links .nav-cta:hover, .nav-links .nav-cta:focus-visible { color: #00170e; background: var(--mint); }
+    .menu-btn { display: none; border: 0; background: transparent; color: var(--text); width: 44px; height: 44px; padding: 10px; border-radius: 8px; cursor: pointer; }
+    .nav-direct { display:none; }
+    .menu-btn svg { width: 100%; height: 100%; }
+
+    .hero { min-height: 100svh; display: flex; align-items: center; padding: 150px 0 88px; isolation: isolate; }
+    #trail-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; opacity: .9; }
+    .hero-ribbons { position:absolute; inset:0; z-index:-2; overflow:hidden; pointer-events:none; opacity:.72; }
+    .hero-ribbons i { position:absolute; left:-14%; width:128%; height:24%; border-radius:50%; border-top:1px solid rgba(74,246,168,.72); transform:rotate(-8deg); filter:drop-shadow(0 -1px 9px rgba(40,235,148,.7)) drop-shadow(0 -1px 24px rgba(40,235,148,.35)); }
+    .hero-ribbons i:nth-child(1){ top:24%; }
+    .hero-ribbons i:nth-child(2){ top:31%; transform:rotate(-3deg); opacity:.58; }
+    .hero-ribbons i:nth-child(3){ top:39%; transform:rotate(5deg); opacity:.32; }
+    .hero-ribbons i:nth-child(4){ top:47%; transform:rotate(11deg); opacity:.18; }
+    .hero-ribbons::after { content:""; position:absolute; inset:0; opacity:.55; background-image:radial-gradient(circle,rgba(134,255,197,.85) 0 1px,transparent 1.6px); background-size:83px 67px; mask-image:linear-gradient(90deg,transparent 2%,black 22%,black 82%,transparent 98%); }
+    .hero::after { content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background: linear-gradient(90deg, var(--bg) 4%, color-mix(in srgb,var(--bg) 86%,transparent) 42%, transparent 82%), linear-gradient(0deg,var(--bg),transparent 45%,color-mix(in srgb,var(--bg) 70%,transparent)); }
+    .hero-inner { position: relative; z-index: 1; }
+    .hero-kicker { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 26px; padding: 7px 11px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .8rem; font-weight: 600; }
+    .hero-kicker i { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 15px var(--emerald); }
+    .gradient-text { background: linear-gradient(100deg, var(--text) 10%, var(--mint) 58%, var(--emerald-bright)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-copy { max-width: 840px; margin-top: 30px; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.26rem); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .btn { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: 50px; padding: 12px 20px; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; font-weight: 700; font-size: .92rem; transition: transform .2s, background .2s, border-color .2s, box-shadow .2s; }
+    .btn svg { width: 18px; height: 18px; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:focus-visible { outline: 2px solid var(--emerald); outline-offset: 3px; }
+    .btn.primary { background: var(--emerald-bright); color: #00170e; border-color: transparent; box-shadow: 0 12px 38px var(--glow); }
+    .btn.primary:hover { background: var(--mint); box-shadow: 0 18px 45px var(--glow); }
+    .btn.secondary { background: var(--surface); color: var(--text); backdrop-filter: blur(10px); }
+    .btn.secondary:hover { border-color: var(--line-strong); background: var(--surface-strong); }
+    .hero-foot { display: flex; justify-content: space-between; align-items: end; gap: 32px; margin-top: 72px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: .84rem; }
+    .hero-foot strong { display: block; color: var(--text); font: 600 1rem "Space Grotesk",sans-serif; margin-bottom: 4px; }
+    .scroll-cue { display:flex; align-items:center; gap:10px; white-space:nowrap; }
+    .scroll-cue span { width: 28px; height: 42px; border: 1px solid var(--line-strong); border-radius: 18px; position: relative; }
+    .scroll-cue span::after { content:""; position:absolute; width:4px; height:7px; left:50%; top:8px; transform:translateX(-50%); border-radius:4px; background:var(--emerald); animation: scrollCue 1.7s infinite; }
+    @keyframes scrollCue { 0%{opacity:0;transform:translate(-50%,0)} 35%{opacity:1} 100%{opacity:0;transform:translate(-50%,14px)} }
+
+    .marquee { overflow: hidden; border-block: 1px solid var(--line); background: var(--surface); }
+    .marquee-track { width: max-content; display: flex; align-items: center; animation: marquee 28s linear infinite; padding: 16px 0; color: var(--muted); font: 600 .76rem "Inter",sans-serif; letter-spacing: .13em; text-transform: uppercase; }
+    .marquee-track span { display: flex; align-items: center; gap: 24px; padding-right: 24px; }
+    .marquee-track span::after { content:""; width: 5px; height: 5px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 10px var(--emerald); }
+    @keyframes marquee { to { transform: translateX(-50%); } }
+
+    /* Centered landing rhythm and roadmap visual */
+    .hero { min-height: auto; padding-bottom: 58px; }
+    .hero-inner { text-align: center; }
+    .hero-kicker { margin-inline: auto; }
+    .hero h1 { margin-inline: auto; }
+    .hero-copy { margin-inline: auto; }
+    .hero .actions { justify-content: center; }
+    .hero-foot { text-align: left; }
+    .roadmap-panel {
+      position: relative;
+      width: min(100%, 1060px);
+      min-height: 390px;
+      margin: 72px auto 0;
+      padding: 34px;
+      overflow: hidden;
+      text-align: left;
+      border: 1px solid var(--line-strong);
+      border-radius: 18px;
+      background: linear-gradient(155deg, rgba(17,42,31,.9), rgba(4,13,9,.93));
+      box-shadow: 0 40px 120px rgba(0,0,0,.42), 0 0 70px rgba(36,220,139,.08);
+    }
+    .roadmap-panel::before { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at 76% 12%,rgba(46,231,153,.17),transparent 32%),linear-gradient(rgba(86,234,167,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(86,234,167,.045) 1px,transparent 1px); background-size:auto,34px 34px,34px 34px; }
+    .roadmap-top { position:relative; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+    .roadmap-label { color:var(--muted); font-size:.78rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
+    .roadmap-status { display:inline-flex; align-items:center; gap:8px; color:var(--mint); font-size:.78rem; font-weight:600; }
+    .roadmap-status::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--emerald-bright); box-shadow:0 0 14px var(--emerald-bright); }
+    .roadmap-flow { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4,1fr); align-items:center; gap:18px; margin-top:105px; }
+    .roadmap-flow::before { content:""; position:absolute; z-index:-1; left:10%; right:10%; top:28px; height:1px; background:linear-gradient(90deg,rgba(74,233,159,.28),var(--emerald-bright),rgba(74,233,159,.28)); box-shadow:0 0 18px rgba(66,231,160,.55); }
+    .roadmap-node { position:relative; text-align:center; }
+    .roadmap-dot { width:56px; height:56px; margin:0 auto 18px; display:grid; place-items:center; border-radius:50%; border:1px solid rgba(92,244,178,.46); background:#092219; color:var(--emerald-bright); box-shadow:0 0 0 9px rgba(49,223,145,.055), 0 0 30px rgba(49,223,145,.2); font:600 .75rem "Space Grotesk",sans-serif; }
+    .roadmap-node:nth-child(2) .roadmap-dot { animation:nodePulse 2.4s ease-in-out infinite; }
+    .roadmap-node strong { display:block; font:600 1.05rem "Space Grotesk",sans-serif; }
+    .roadmap-node small { display:block; margin-top:5px; color:var(--muted); font-size:.76rem; }
+    @keyframes nodePulse { 50% { box-shadow:0 0 0 14px rgba(49,223,145,.03),0 0 42px rgba(49,223,145,.42); } }
+
+    .industry-strip { border-block:1px solid var(--line); background:var(--surface); }
+    .industry-strip p { padding:19px 0; color:var(--muted); text-align:center; font-size:.78rem; font-weight:600; letter-spacing:.08em; }
+
+    .partner-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 9vw; align-items: start; }
+    .partner-statement { font: 500 clamp(1.6rem,3vw,2.6rem)/1.3 "Space Grotesk",sans-serif; letter-spacing: -.025em; }
+    .partner-statement em { color: var(--emerald); font-style: normal; }
+    .promise { margin-top: 34px; padding: 22px 0 22px 24px; border-left: 2px solid var(--emerald); color: var(--muted); }
+    .promise strong { display:block; color:var(--text); margin-bottom:6px; }
+
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .card { position: relative; overflow: hidden; border: 1px solid var(--line); background: linear-gradient(140deg,var(--surface-strong),var(--surface)); backdrop-filter: blur(12px); box-shadow: var(--shadow); }
+    .service-card { grid-column: span 4; min-height: 315px; padding: 28px; border-radius: 14px; transition: transform .25s, border-color .25s, box-shadow .25s; }
+    .service-card::before { content:""; position:absolute; width:170px; height:170px; border-radius:50%; right:-90px; top:-100px; background:var(--glow); filter:blur(30px); opacity:0; transition:opacity .3s; }
+    .service-card:hover { transform: translateY(-4px); border-color: var(--line-strong); box-shadow: 0 24px 80px var(--glow); }
+    .service-card:hover::before { opacity:1; }
+    .card-num { display:flex; align-items:center; justify-content:space-between; color:var(--emerald); font:600 .78rem "Space Grotesk",sans-serif; margin-bottom:64px; }
+    .card-num svg { width:22px; height:22px; stroke-width:1.6; }
+    .service-card h3 { margin-bottom: 14px; max-width:260px; }
+    .service-card p { color:var(--muted); font-size:.94rem; }
+
+    .bento-services .service-card:nth-child(1), .bento-services .service-card:nth-child(4), .bento-services .service-card:nth-child(5) { grid-column:span 7; }
+    .bento-services .service-card:nth-child(2), .bento-services .service-card:nth-child(3), .bento-services .service-card:nth-child(6) { grid-column:span 5; }
+    .bento-services .service-card:nth-child(1), .bento-services .service-card:nth-child(4) { min-height:360px; }
+    .service-visual { position:absolute; right:24px; top:72px; width:145px; height:104px; opacity:.78; }
+    .signal-bars { display:flex; align-items:flex-end; justify-content:flex-end; gap:8px; }
+    .signal-bars i { width:15px; border:1px solid rgba(86,239,171,.3); background:linear-gradient(to top,rgba(42,222,143,.45),rgba(42,222,143,.05)); box-shadow:0 0 18px rgba(42,222,143,.08); }
+    .signal-bars i:nth-child(1){height:32px}.signal-bars i:nth-child(2){height:48px}.signal-bars i:nth-child(3){height:67px}.signal-bars i:nth-child(4){height:91px}
+    .orbit-mini { border:1px solid rgba(74,233,159,.34); border-radius:50%; animation:spin 14s linear infinite; }
+    .orbit-mini::before,.orbit-mini::after { content:""; position:absolute; border-radius:50%; }
+    .orbit-mini::before { inset:22px; border:1px solid rgba(74,233,159,.2); }
+    .orbit-mini::after { width:10px; height:10px; right:-5px; top:45%; background:var(--emerald-bright); box-shadow:0 0 20px var(--emerald-bright); }
+    .bento-services .service-card:has(.service-visual) h3,.bento-services .service-card:has(.service-visual) p { max-width:58%; }
+
+    .process { background: var(--surface-dark); color: #f2faf5; overflow: hidden; }
+    .process .muted, .process .section-head p { color: #9db2a7; }
+    .process .eyebrow { color:#53f0ad; }
+    .process-list { counter-reset: steps; }
+    .process-row { display:grid; grid-template-columns:110px minmax(200px,.7fr) 1.3fr; gap:32px; padding:30px 0; border-top:1px solid rgba(210,255,233,.14); align-items:start; }
+    .process-row:last-child { border-bottom:1px solid rgba(210,255,233,.14); }
+    .step-num { color:#53f0ad; font:500 1rem "Space Grotesk",sans-serif; }
+    .process-row h3 { font-size:clamp(1.3rem,2vw,1.8rem); }
+    .process-row p { color:#9db2a7; max-width:610px; }
+
+    .process-list { display:grid; gap:14px; }
+    .process-row { position:relative; padding:30px 32px; border:1px solid rgba(210,255,233,.14); border-radius:12px; background:linear-gradient(100deg,rgba(54,219,143,.07),rgba(54,219,143,.015)); }
+    .process-row:last-child { border-bottom:1px solid rgba(210,255,233,.14); }
+    .process-row::after { content:""; position:absolute; right:26px; top:50%; width:54px; height:1px; background:linear-gradient(90deg,transparent,#53f0ad); opacity:.45; }
+
+    .statement-band { overflow:hidden; padding:100px 0; border-block:1px solid var(--line); background:linear-gradient(135deg,#09251b,#06100c 72%); }
+    .statement-band p { max-width:1080px; margin:auto; text-align:center; color:#f3fbf6; font:600 clamp(2.45rem,6.4vw,6.1rem)/1.02 "Space Grotesk",sans-serif; letter-spacing:-.05em; }
+    .statement-band em { color:#53f0ad; font-style:normal; }
+
+    .audience-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .audience-card { min-height:260px; padding:30px; border-radius:14px; display:flex; flex-direction:column; justify-content:space-between; }
+    .audience-num { color:var(--emerald); font:600 .78rem "Space Grotesk",sans-serif; }
+    .audience-card p { max-width:480px; color:var(--text); font:500 clamp(1.15rem,2vw,1.55rem)/1.38 "Space Grotesk",sans-serif; }
+
+    .proof-layout { display:grid; grid-template-columns:1.2fr .8fr; gap:9vw; align-items:end; }
+    .proof-actions { margin: 0; justify-content: flex-end; }
+
+    .live-panel { position:relative; border-radius:18px; padding:clamp(26px,5vw,58px); background:linear-gradient(145deg,#09291e,#06100c 72%); color:#f4fff8; border:1px solid rgba(70,238,161,.26); box-shadow:0 36px 120px rgba(0,0,0,.42); overflow:hidden; }
+    .live-panel::before { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at 85% 5%,rgba(39,225,140,.22),transparent 34%),linear-gradient(rgba(68,220,151,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(68,220,151,.06) 1px,transparent 1px); background-size:auto,42px 42px,42px 42px; }
+    .live-top,.live-content { position:relative; z-index:1; }
+    .live-top { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:80px; }
+    .live-label { font:600 .77rem "Inter",sans-serif; color:#a9beb3; letter-spacing:.14em; text-transform:uppercase; }
+    .live-badge { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:rgba(39,225,140,.1); color:#67f2b3; border:1px solid rgba(71,237,160,.26); font-size:.76rem; font-weight:700; }
+    .live-badge::before { content:""; width:8px; height:8px; border-radius:50%; background:#44e89d; box-shadow:0 0 0 0 rgba(68,232,157,.6); animation:pulse 1.8s infinite; }
+    @keyframes pulse { 70%{box-shadow:0 0 0 8px rgba(68,232,157,0)} 100%{box-shadow:0 0 0 0 rgba(68,232,157,0)} }
+    .live-content { display:grid; grid-template-columns:1.1fr .9fr; gap:8vw; align-items:end; }
+    .live-panel h3 { font-size:clamp(2rem,5vw,4.25rem); max-width:620px; margin-bottom:22px; }
+    .live-panel .summary { color:#b0c2b8; font-size:1.05rem; max-width:650px; }
+    .status-note { margin-top:32px; padding:20px; border:1px solid rgba(70,238,161,.22); background:rgba(54,219,143,.07); border-radius:10px; color:#d0e2d8; font-size:.9rem; }
+    .status-note strong { color:#66efb2; }
+    .disclaimer { margin-top:20px; color:#80968b; font-size:.78rem; }
+    .live-actions { display:grid; gap:12px; }
+    .live-actions .btn { width:100%; }
+
+    .cred-grid { display:grid; grid-template-columns:1.15fr .85fr; gap:16px; }
+    .cred-main,.network { border-radius:14px; padding:clamp(28px,4vw,48px); }
+    .cred-main { min-height:350px; display:flex; flex-direction:column; justify-content:space-between; }
+    .cred-main .giant-mark { width:66px; height:66px; color:var(--emerald); }
+    .cred-main p { font:500 clamp(1.25rem,2.5vw,2rem)/1.35 "Space Grotesk",sans-serif; max-width:650px; }
+    .network { background: var(--text); color:var(--bg); border:0; display:flex; flex-direction:column; justify-content:flex-end; min-height:350px; }
+    .network .network-tag { color:var(--emerald); font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700; margin-bottom:auto; }
+    .network h3 { font-size:1.8rem; margin-bottom:14px; }
+    .network p { opacity:.72; }
+
+    .about { overflow:hidden; }
+    .about-layout { display:grid; grid-template-columns:1fr 1fr; gap:9vw; align-items:center; }
+    .about-orbit { position:relative; min-height:500px; display:grid; place-items:center; }
+    .orbit-ring { position:absolute; border:1px solid var(--line-strong); border-radius:50%; }
+    .orbit-ring.one { width:380px; height:380px; animation:spin 22s linear infinite; }
+    .orbit-ring.two { width:260px; height:260px; animation:spin 14s linear infinite reverse; }
+    .orbit-ring::after { content:""; position:absolute; width:11px; height:11px; top:50%; right:-6px; border-radius:50%; background:var(--emerald); box-shadow:0 0 28px var(--emerald); }
+    .orbit-core { width:145px; height:145px; border-radius:50%; display:grid; place-items:center; text-align:center; background:var(--surface-strong); border:1px solid var(--line-strong); box-shadow:0 0 80px var(--glow); font:700 1.05rem/1.2 "Space Grotesk",sans-serif; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .about-copy > p { color:var(--muted); font-size:1.05rem; margin-top:24px; }
+    .quote { margin-top:30px; padding:24px 0; border-block:1px solid var(--line); color:var(--text)!important; font:600 1.2rem/1.45 "Space Grotesk",sans-serif; }
+    .founder { display:flex; align-items:center; gap:12px; margin-top:22px; color:var(--muted); font-size:.9rem; }
+    .founder::before { content:"NY"; width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:var(--surface); border:1px solid var(--line); color:var(--emerald); font:600 .76rem "Space Grotesk",sans-serif; }
+
+    .closing-cta { padding:42px 0 34px; }
+    .closing-panel { position:relative; overflow:hidden; padding:clamp(38px,7vw,82px); text-align:center; border:1px solid var(--line-strong); border-radius:20px; background:radial-gradient(circle at 50% 110%,rgba(48,225,146,.25),transparent 46%),linear-gradient(145deg,#0a241a,#06100c); box-shadow:0 38px 120px rgba(0,0,0,.38),0 0 90px rgba(39,224,143,.08); }
+    .closing-panel::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(rgba(72,231,158,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(72,231,158,.045) 1px,transparent 1px); background-size:38px 38px; mask-image:linear-gradient(to bottom,transparent,black); }
+    .closing-panel > * { position:relative; z-index:1; }
+    .closing-panel h2 { max-width:900px; margin:auto; font-size:clamp(2.5rem,6vw,5.5rem); }
+    .closing-panel p { max-width:700px; margin:26px auto 0; color:#afc4b9; font-size:1.05rem; }
+    .closing-panel .actions { justify-content:center; }
+
+    .contact { padding-top:80px; }
+    .contact-shell { border-radius:20px; overflow:hidden; display:grid; grid-template-columns:.82fr 1.18fr; background:var(--surface-dark); color:#f4fff8; border:1px solid rgba(74,225,158,.2); box-shadow:0 40px 120px rgba(0,0,0,.3); }
+    .contact-copy { padding:clamp(30px,5vw,64px); position:relative; overflow:hidden; }
+    .contact-copy::after { content:""; position:absolute; width:320px; height:320px; border-radius:50%; background:rgba(34,220,137,.16); filter:blur(60px); left:-120px; bottom:-180px; }
+    .contact-copy h2 { font-size:clamp(2.35rem,5vw,4.6rem); }
+    .contact-copy > p { color:#a8beb2; margin-top:24px; }
+    .direct { display:inline-flex; align-items:center; gap:10px; margin-top:34px; color:#65efb1; text-decoration:none; font-weight:600; word-break:break-word; position:relative; z-index:1; }
+    .direct:hover { text-decoration:underline; }
+    .contact-form { background:var(--surface-strong); color:var(--text); padding:clamp(26px,5vw,58px); }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    label { display:block; color:var(--muted); font-size:.82rem; font-weight:600; margin-bottom:7px; }
+    .field { margin-bottom:17px; }
+    input, textarea { width:100%; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--text); padding:13px 14px; outline:none; transition:border-color .2s,box-shadow .2s; }
+    textarea { min-height:105px; resize:vertical; }
+    input:focus,textarea:focus { border-color:var(--emerald); box-shadow:0 0 0 3px var(--glow); }
+    .form-btn { border:0; cursor:pointer; width:100%; margin-top:4px; }
+    .response-note { min-height:24px; margin-top:13px; color:var(--muted); font-size:.78rem; }
+
+    footer { padding:60px 0 34px; }
+    .footer-top { display:grid; grid-template-columns:1fr auto; gap:40px; padding-bottom:38px; }
+    .footer-desc { max-width:540px; color:var(--muted); }
+    .footer-email { display:inline-block; margin-top:14px; color:var(--emerald); text-decoration:none; font-weight:600; }
+    .footer-links { display:grid; grid-template-columns:repeat(2,auto); gap:9px 28px; }
+    .footer-links a { color:var(--muted); text-decoration:none; font-size:.9rem; }
+    .footer-links a:hover { color:var(--text); }
+    .footer-bottom { border-top:1px solid var(--line); padding-top:22px; display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.78rem; }
+
+    .reveal { opacity:1; transform:none; transition:opacity .7s ease, transform .7s ease; }
+    .reveal.will-reveal { opacity:1; transform:translateY(8px); }
+    .reveal.will-reveal.visible { opacity:1; transform:none; }
+
+    @media (max-width: 900px) {
+      .nav-context { font-size:.7rem; }
+      .menu-btn { display:block; }
+      .nav-links { position:absolute; top:calc(100% + 8px); left:20px; right:20px; display:none; flex-direction:column; align-items:stretch; padding:10px; border:1px solid var(--line); border-radius:12px; background:var(--surface-strong); backdrop-filter:blur(18px); box-shadow:var(--shadow); }
+      .nav-links.open { display:flex; }
+      .nav-links a { padding:12px 14px; }
+      .partner-layout,.proof-layout,.about-layout { grid-template-columns:1fr; gap:48px; }
+      .service-card { grid-column:span 6; }
+      .bento-services .service-card:nth-child(n) { grid-column:span 6; }
+      .audience-grid { grid-template-columns:1fr 1fr; }
+      .live-content,.cred-grid,.contact-shell { grid-template-columns:1fr; }
+      .live-actions { grid-template-columns:1fr 1fr; margin-top:12px; }
+      .proof-actions { justify-content:flex-start; }
+      .about-orbit { order:2; min-height:400px; }
+      .orbit-ring.one { width:330px;height:330px; }
+      .footer-top { grid-template-columns:1fr; }
+    }
+    @media (max-width: 640px) {
+      :root { --nav-h:64px; }
+      .wrap { width:min(calc(100% - 28px),var(--max)); }
+      .section { padding:80px 0; }
+      .nav-shell { padding:0 10px; top:8px; }
+      .nav { padding-left:14px; }
+      .nav-context { max-width:200px; white-space:normal; line-height:1.25; }
+      .nav-context .context-copy { display:none; }
+      .brand-mark { width:38px; height:38px; }
+      .hero { min-height:auto; padding:132px 0 62px; }
+      h1 { font-size:clamp(3.05rem,14vw,4.7rem); }
+      .hero-copy { font-size:1rem; }
+      .actions { display:grid; grid-template-columns:1fr; }
+      .hero-foot { align-items:flex-start; margin-top:42px; }
+      .roadmap-panel { margin-top:52px; min-height:0; padding:24px 20px; }
+      .roadmap-top { align-items:center; }
+      .roadmap-flow { grid-template-columns:1fr; gap:24px; margin-top:42px; }
+      .roadmap-flow::before { left:27px; right:auto; top:28px; bottom:28px; width:1px; height:auto; background:linear-gradient(180deg,rgba(74,233,159,.28),var(--emerald-bright),rgba(74,233,159,.28)); }
+      .roadmap-node { display:grid; grid-template-columns:56px 1fr; column-gap:17px; align-items:center; text-align:left; }
+      .roadmap-dot { margin:0; grid-row:1 / span 2; }
+      .roadmap-node small { margin-top:2px; }
+      .industry-strip p { font-size:.7rem; letter-spacing:.045em; }
+      .scroll-cue { display:none; }
+      .partner-statement { font-size:1.55rem; }
+      .service-card { grid-column:span 12; min-height:0; }
+      .bento-services .service-card:nth-child(n) { grid-column:span 12; min-height:0; }
+      .bento-services .service-card:has(.service-visual) h3,.bento-services .service-card:has(.service-visual) p { max-width:none; }
+      .service-visual { position:relative; inset:auto; width:100%; height:72px; margin:0 0 26px; justify-content:flex-start; }
+      .orbit-mini { width:72px; }
+      .card-num { margin-bottom:40px; }
+      .audience-grid { grid-template-columns:1fr; }
+      .audience-card { min-height:210px; }
+      .process-row { grid-template-columns:46px 1fr; gap:12px 12px; padding:24px 20px; }
+      .process-row p { grid-column:2; }
+      .process-row::after { display:none; }
+      .statement-band { padding:72px 0; }
+      .live-top { margin-bottom:50px; }
+      .live-content { gap:28px; }
+      .live-actions { grid-template-columns:1fr; }
+      .status-note { padding:16px; }
+      .cred-main,.network { min-height:300px; }
+      .about-orbit { min-height:330px; }
+      .orbit-ring.one { width:285px;height:285px; }
+      .orbit-ring.two { width:205px;height:205px; }
+      .orbit-core { width:120px;height:120px; }
+      .field-row { grid-template-columns:1fr; gap:0; }
+      .footer-links { grid-template-columns:1fr 1fr; }
+      .footer-bottom { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior:auto; }
+      *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
+      .marquee-track { animation:none; }
+      .reveal { opacity:1; transform:none; }
+      #trail-canvas { display:none; }
+    }
+
+    /* Desktop fidelity pass — spacious, cinematic, and deliberately restrained. */
+    @media (min-width: 901px) {
+      :root { --max: 1200px; --nav-h: 68px; }
+      .section { padding: 148px 0; }
+      .section-head { margin-bottom: 58px; }
+      .nav-shell { top: 18px; }
+      .nav {
+        position: relative;
+        width: min(calc(100% - 72px), 1200px);
+        min-height: var(--nav-h);
+        padding: 8px 10px 8px 22px;
+        border-radius: 999px;
+        border-color: rgba(151,237,194,.17);
+        background: rgba(3,12,8,.68);
+        box-shadow: 0 18px 60px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.025);
+      }
+      .nav-links { gap: 2px; position:absolute; left:50%; transform:translateX(-50%); }
+      .nav-links a { border-radius: 999px; padding: 10px 14px; }
+      .nav-direct { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:10px 20px; border-radius:999px; color:#00170e; background:var(--emerald-bright); text-decoration:none; font-size:.86rem; font-weight:700; box-shadow:0 0 30px rgba(47,231,151,.15); }
+      .mobile-contact { display:none; }
+      .nav-context { color:var(--text); letter-spacing:.1em; }
+      .nav-context .context-copy { color:var(--muted); font-size:.67rem; letter-spacing:.09em; }
+      .brand-mark { width:38px; height:38px; }
+
+      .hero {
+        position: relative;
+        min-height: 100svh;
+        padding: 176px 0 88px;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse at 50% 14%, rgba(32,197,122,.12), transparent 34%),
+          linear-gradient(180deg, #020705 0%, #04100b 62%, var(--bg) 100%);
+      }
+      #trail-canvas { opacity: 1; }
+      .hero::after {
+        background:
+          radial-gradient(ellipse at 50% 37%, transparent 0%, rgba(3,8,6,.08) 43%, rgba(3,8,6,.7) 91%),
+          linear-gradient(180deg, rgba(3,8,6,.12), transparent 34%, var(--bg) 99%);
+      }
+      .hero-kicker { margin-bottom: 32px; padding: 8px 14px; background: rgba(6,24,16,.6); box-shadow: inset 0 1px rgba(255,255,255,.035), 0 0 30px rgba(39,224,143,.06); }
+      .hero h1 { font-size: clamp(4.9rem, 7.5vw, 7.4rem); line-height: .91; max-width: 1120px; text-shadow: 0 12px 60px rgba(0,0,0,.48); }
+      .hero-copy { max-width: 810px; margin-top: 32px; line-height: 1.7; }
+      .hero .actions { margin-top: 38px; }
+      .btn { border-radius: 999px; min-height: 54px; padding-inline: 24px; }
+      .btn.primary { box-shadow: 0 0 0 1px rgba(139,255,202,.18), 0 15px 45px rgba(31,226,141,.19); }
+      .btn.primary:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(192,255,225,.28), 0 21px 58px rgba(31,226,141,.28); }
+      .btn.secondary { background: rgba(5,19,13,.62); }
+
+      .roadmap-panel {
+        min-height: 430px;
+        margin-top: 94px;
+        padding: 40px 42px;
+        border-radius: 24px;
+        border-color: rgba(88,239,168,.29);
+        background: linear-gradient(155deg, rgba(11,35,25,.79), rgba(2,9,6,.88));
+        box-shadow: 0 55px 160px rgba(0,0,0,.52), 0 0 100px rgba(36,220,139,.1), inset 0 1px rgba(255,255,255,.035);
+      }
+      .roadmap-panel::after {
+        content: "";
+        position: absolute;
+        inset: auto 9% -42% 9%;
+        height: 70%;
+        pointer-events: none;
+        border-radius: 50%;
+        background: rgba(40,225,142,.12);
+        filter: blur(70px);
+      }
+      .roadmap-flow { margin-top: 122px; }
+      .roadmap-dot { width: 62px; height: 62px; }
+      .hero-foot { width: min(100%, 1060px); margin: 36px auto 0; }
+
+      .industry-strip { position: relative; z-index: 2; background: rgba(7,24,17,.82); }
+      .industry-strip p { padding: 21px 0; }
+      .partner-layout { grid-template-columns: .72fr 1.28fr; gap: 11vw; }
+      .bento-services { gap: 18px; }
+      .service-card { padding: 34px; border-radius: 20px; }
+      .process-list { max-width: 1090px; margin-inline: auto; gap: 18px; }
+      .process-row { width: 88%; min-height: 134px; align-items: center; border-radius: 18px; }
+      .process-row:nth-child(odd) { margin-right: auto; }
+      .process-row:nth-child(even) { margin-left: auto; background: linear-gradient(260deg,rgba(54,219,143,.075),rgba(54,219,143,.012)); }
+      .process-row:nth-child(even)::after { right: auto; left: 26px; transform: rotate(180deg); }
+      .statement-band { padding: 126px 0; }
+      .audience-grid { gap: 18px; }
+      .audience-card { min-height: 300px; padding: 36px; border-radius: 20px; }
+      .live-panel { padding: 66px; border-radius: 24px; }
+      .cred-main, .network { border-radius: 20px; }
+      .closing-cta { padding: 70px 0 48px; }
+      .closing-panel { padding-block: 96px; border-radius: 26px; }
+      .contact-shell { border-radius: 24px; }
+    }
+
+    .hero.webgl-fallback::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 72% 25%, rgba(41,225,143,.22), transparent 32%),
+        radial-gradient(ellipse at 22% 56%, rgba(20,130,83,.14), transparent 38%),
+        linear-gradient(145deg, transparent 20%, rgba(55,238,158,.08) 43%, transparent 61%);
+    }
+    .reveal.will-reveal { opacity: 1; transform: translateY(18px); }
+    .reveal.will-reveal.visible { opacity: 1; transform: none; }
+
+    /* Scroll-driven 3D stage — enabled only by JS after desktop/WebGL checks pass. */
+    .orbit-experience { display:none; position:relative; height:600vh; background:#020705; }
+    .orbit-stage { position:sticky; top:0; height:100svh; min-height:680px; overflow:hidden; perspective:1600px; perspective-origin:50% 48%; isolation:isolate; }
+    #orbit-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:0; }
+    .orbit-stage::before { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background:radial-gradient(circle at 67% 48%,transparent 0 18%,rgba(1,8,5,.06) 31%,rgba(1,6,4,.62) 76%),linear-gradient(90deg,rgba(2,7,5,.92) 0%,rgba(2,7,5,.4) 44%,transparent 63%,rgba(2,7,5,.48) 100%); }
+    .orbit-stage::after { content:""; position:absolute; inset:92px 38px 34px; z-index:2; pointer-events:none; border:1px solid rgba(108,244,179,.12); border-radius:24px; box-shadow:inset 0 0 80px rgba(0,0,0,.32),0 0 110px rgba(23,220,132,.04); }
+    .stage-core { position:absolute; left:50%; top:49%; z-index:3; width:min(34vw,460px); aspect-ratio:1; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none; }
+    .stage-core::before,.stage-core::after { content:""; position:absolute; border-radius:50%; }
+    .stage-core::before { inset:8%; border:1px solid rgba(111,255,188,.28); box-shadow:0 0 70px rgba(28,224,137,.15),inset 0 0 60px rgba(31,221,138,.08); animation:coreBreathe 5s ease-in-out infinite; }
+    .stage-core::after { inset:27%; border:1px solid rgba(176,255,218,.19); box-shadow:0 0 45px rgba(63,244,161,.2); }
+    .stage-core-ring { position:absolute; inset:0; border:1px solid rgba(88,237,167,.18); border-radius:50%; transform:rotateX(66deg) rotateZ(-13deg); animation:coreSpin 13s linear infinite; }
+    .stage-core-ring:nth-child(2) { inset:16%; transform:rotateY(67deg) rotateZ(32deg); animation-duration:9s; animation-direction:reverse; }
+    .stage-core-ring::after { content:""; position:absolute; width:9px; height:9px; top:50%; right:-5px; border-radius:50%; background:var(--emerald-bright); box-shadow:0 0 22px var(--emerald-bright); }
+    .stage-core-label { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:160px; text-align:center; color:rgba(220,255,236,.72); font:600 .68rem/1.45 "Inter",sans-serif; letter-spacing:.18em; text-transform:uppercase; }
+    .stage-core-label strong { display:block; color:#effff6; font:600 1.1rem/1.1 "Space Grotesk",sans-serif; letter-spacing:-.02em; text-transform:none; margin-bottom:8px; }
+    @keyframes coreSpin { to { transform:rotateX(66deg) rotateZ(347deg); } }
+    @keyframes coreBreathe { 50% { transform:scale(1.035); opacity:.72; } }
+
+    .orbit-scene { position:absolute; inset:0; z-index:4; transform-style:preserve-3d; }
+    .orbit-ring { position:absolute; inset:0; transform-style:preserve-3d; will-change:transform; }
+    .orbit-panel { --panel-angle:0deg; position:absolute; inset:0; transform:rotateY(var(--panel-angle)) translateZ(240px); transform-style:preserve-3d; pointer-events:none; opacity:.08; }
+    .orbit-panel.is-active { pointer-events:auto; }
+    .orbit-card { position:absolute; left:clamp(130px,10vw,160px); top:50%; width:min(40vw,560px); max-height:calc(100svh - 180px); overflow:auto; overscroll-behavior:contain; transform:translateY(-50%) translateZ(1px); padding:clamp(26px,3vw,46px); border:1px solid rgba(121,245,184,.2); border-radius:22px; background:linear-gradient(145deg,rgba(7,24,16,.93),rgba(3,11,7,.88)); box-shadow:0 34px 100px rgba(0,0,0,.46),inset 0 1px rgba(255,255,255,.03); scrollbar-width:thin; scrollbar-color:rgba(73,231,157,.35) transparent; }
+    .orbit-card::-webkit-scrollbar { width:5px; }
+    .orbit-card::-webkit-scrollbar-thumb { background:rgba(73,231,157,.35); border-radius:4px; }
+    .orbit-card::after { content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit; background:linear-gradient(120deg,rgba(86,246,173,.04),transparent 34%); }
+    .orbit-card > * { position:relative; z-index:1; }
+    .orbit-kicker { display:flex; align-items:center; gap:10px; margin:0 0 15px; color:var(--emerald-bright); font-size:.68rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+    .orbit-kicker::before { content:""; width:28px; height:1px; background:currentColor; box-shadow:0 0 12px currentColor; }
+    .orbit-card h1 { max-width:520px; font-size:clamp(2.55rem,3.55vw,4.05rem); line-height:.93; }
+    .orbit-card h2 { font-size:clamp(2rem,3.2vw,3.8rem); line-height:.98; }
+    .orbit-card h3 { font-size:1rem; letter-spacing:-.02em; }
+    .orbit-card .orbit-lede { margin-top:19px; max-width:610px; color:#b7cbc0; font-size:clamp(.92rem,1.15vw,1.05rem); line-height:1.62; }
+    .orbit-card .actions { margin-top:26px; }
+    .orbit-card .btn { min-height:48px; padding:11px 18px; }
+    .orbit-mini-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:24px; }
+    .orbit-item { min-height:112px; padding:16px; border:1px solid rgba(132,241,186,.12); border-radius:12px; background:rgba(25,60,43,.32); }
+    .orbit-item span { display:block; margin-bottom:8px; color:var(--emerald); font:600 .64rem "Space Grotesk",sans-serif; }
+    .orbit-item h3 { margin-bottom:7px; }
+    .orbit-item p { color:#aabfb4; font-size:.74rem; line-height:1.45; }
+    .orbit-stack { display:grid; gap:10px; margin-top:24px; }
+    .orbit-step { display:grid; grid-template-columns:34px 145px 1fr; align-items:start; gap:12px; padding:14px 16px; border-top:1px solid rgba(122,238,181,.16); }
+    .orbit-step span { color:var(--emerald); font:600 .72rem "Space Grotesk",sans-serif; }
+    .orbit-step p { color:#acbfb5; font-size:.78rem; line-height:1.45; }
+    .orbit-quote { margin-top:22px; padding:20px 0; border-block:1px solid rgba(134,239,188,.16); color:#eafff3; font:500 1.08rem/1.45 "Space Grotesk",sans-serif; }
+    .orbit-promise { margin-top:18px; padding:15px 17px; border-left:2px solid var(--emerald); color:#abc0b5; font-size:.82rem; }
+    .orbit-promise strong { display:block; margin-bottom:4px; color:#f0fff6; }
+    .orbit-statement { font:600 clamp(2.35rem,4.8vw,5.1rem)/1 "Space Grotesk",sans-serif; letter-spacing:-.052em; }
+    .orbit-statement em { color:var(--emerald-bright); font-style:normal; }
+    .orbit-audience { grid-template-columns:1fr 1fr; }
+    .orbit-audience .orbit-item { min-height:96px; }
+    .orbit-proof { margin-top:18px; color:#b7c9bf; font-size:.82rem; }
+    .orbit-live-top { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:24px; }
+    .orbit-live-badge { padding:6px 10px; border:1px solid rgba(85,239,166,.25); border-radius:999px; color:#64efb0; background:rgba(50,223,145,.08); font-size:.7rem; font-weight:700; }
+    .orbit-status { margin-top:20px; padding:15px 17px; border:1px solid rgba(90,236,167,.18); border-radius:10px; background:rgba(42,217,143,.055); color:#c3d7cc; font-size:.8rem; }
+    .orbit-status strong { color:#68f1b3; }
+    .orbit-disclaimer { margin-top:13px; color:#849b8f; font-size:.68rem; }
+    .orbit-about-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:22px; }
+    .orbit-about-grid p { color:#aec2b7; font-size:.82rem; }
+    .orbit-founder { display:flex; align-items:center; gap:10px; margin-top:16px; color:#a9bdb2; font-size:.78rem; }
+    .orbit-founder::before { content:"NY"; width:36px; height:36px; display:grid; place-items:center; border-radius:50%; border:1px solid rgba(99,241,174,.22); color:var(--emerald); font:600 .65rem "Space Grotesk",sans-serif; }
+    .orbit-contact-card { width:min(53vw,760px); }
+    .orbit-contact-layout { display:grid; grid-template-columns:.75fr 1.25fr; gap:28px; margin-top:24px; }
+    .orbit-contact-copy p { color:#aebfb6; font-size:.82rem; }
+    .orbit-contact-copy .direct { margin-top:20px; font-size:.78rem; }
+    .orbit-contact-card .contact-form { padding:0; background:transparent; }
+    .orbit-contact-card .field { margin-bottom:10px; }
+    .orbit-contact-card label { margin-bottom:5px; font-size:.72rem; }
+    .orbit-contact-card input,.orbit-contact-card textarea { padding:10px 11px; font-size:.82rem; }
+    .orbit-contact-card textarea { min-height:68px; }
+    .orbit-contact-card .form-btn { min-height:44px; }
+    .orbit-contact-card .response-note { min-height:18px; margin-top:8px; }
+
+    .orbit-progress { position:absolute; right:clamp(54px,5vw,92px); top:50%; z-index:7; display:grid; gap:11px; transform:translateY(-50%); }
+    .orbit-dot { position:relative; width:26px; height:26px; border:0; padding:0; border-radius:50%; background:transparent; cursor:pointer; }
+    .orbit-dot::before { content:""; position:absolute; left:50%; top:50%; width:5px; height:5px; transform:translate(-50%,-50%); border-radius:50%; background:rgba(172,208,189,.36); transition:width .25s,height .25s,background .25s,box-shadow .25s; }
+    .orbit-dot:hover::before,.orbit-dot:focus-visible::before { background:var(--mint); }
+    .orbit-dot:focus-visible { outline:1px solid var(--emerald); outline-offset:2px; }
+    .orbit-dot.is-active::before { width:10px; height:10px; background:var(--emerald-bright); box-shadow:0 0 16px var(--emerald-bright); }
+    .orbit-counter { position:absolute; left:clamp(58px,7vw,132px); bottom:42px; z-index:7; display:flex; align-items:center; gap:15px; color:rgba(194,218,205,.65); font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; }
+    .orbit-counter strong { color:#effff6; font:600 .78rem "Space Grotesk",sans-serif; }
+    .orbit-counter::before { content:""; width:50px; height:1px; background:linear-gradient(90deg,var(--emerald),transparent); }
+    .orbit-scroll-note { position:absolute; right:clamp(54px,5vw,92px); bottom:42px; z-index:7; color:rgba(190,215,201,.55); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; }
+    .orbit-scroll-note::after { content:" ↓"; color:var(--emerald); }
+
+    @media (min-width:901px) and (prefers-reduced-motion:no-preference) {
+      html.orbit-ready .orbit-experience { display:block; }
+      html.orbit-ready .stacked-site { display:none; }
+      html.orbit-ready body { background:#020705; }
+      html.orbit-ready footer { position:relative; z-index:8; background:var(--bg); }
+    }
+    @media (max-width:1260px) and (min-width:901px) {
+      .orbit-card { left:110px; width:min(42vw,520px); }
+      .stage-core { left:50%; width:min(31vw,390px); }
+      .orbit-progress,.orbit-scroll-note { right:36px; }
+      .orbit-counter { left:54px; }
+    }
+
+    /* Electric-blue palette and diagonal desktop flight path. */
+    body {
+      background:
+        radial-gradient(circle at 78% 12%, rgba(30,117,255,.13), transparent 34rem),
+        radial-gradient(circle at 10% 72%, rgba(28,185,255,.08), transparent 30rem),
+        var(--bg);
+    }
+    ::selection { color:#00102b; }
+    .brand-mark { background:rgba(46,124,246,.11); box-shadow:inset 0 0 18px rgba(46,124,246,.14),0 0 28px rgba(46,124,246,.16); }
+    .nav-links .nav-cta,.nav-direct,.btn.primary { color:#00102b; }
+    .nav-links .nav-cta:hover,.nav-links .nav-cta:focus-visible { color:#00102b; }
+    .hero-ribbons i { border-top-color:rgba(66,174,255,.82); filter:drop-shadow(0 -1px 9px rgba(46,124,246,.8)) drop-shadow(0 -1px 26px rgba(44,187,255,.48)); }
+    .hero-ribbons::after { background-image:radial-gradient(circle,rgba(112,209,255,.9) 0 1px,transparent 1.6px); }
+    .roadmap-panel { background:linear-gradient(155deg,rgba(10,39,88,.9),rgba(2,11,29,.95)); box-shadow:0 40px 120px rgba(0,4,18,.5),0 0 76px rgba(46,124,246,.18); }
+    .roadmap-panel::before { background:radial-gradient(circle at 76% 12%,rgba(46,124,246,.24),transparent 32%),linear-gradient(rgba(69,169,255,.065) 1px,transparent 1px),linear-gradient(90deg,rgba(69,169,255,.065) 1px,transparent 1px); background-size:auto,34px 34px,34px 34px; }
+    .roadmap-flow::before { background:linear-gradient(90deg,rgba(46,124,246,.28),var(--emerald-bright),rgba(55,201,255,.28)); box-shadow:0 0 22px rgba(46,124,246,.7); }
+    .roadmap-dot { border-color:rgba(89,181,255,.58); background:#071d48; box-shadow:0 0 0 9px rgba(46,124,246,.08),0 0 34px rgba(46,124,246,.3); }
+    .signal-bars i { border-color:rgba(83,182,255,.35); background:linear-gradient(to top,rgba(46,124,246,.6),rgba(46,124,246,.05)); box-shadow:0 0 18px rgba(46,124,246,.18); }
+    .orbit-mini { border-color:rgba(71,169,255,.48); }
+    .orbit-mini::before { border-color:rgba(71,169,255,.28); }
+    .process { background:#04132c; }
+    .process .muted,.process .section-head p,.process-row p { color:#b0c5e4; }
+    .process .eyebrow,.step-num { color:#53b7ff; }
+    .process-row { border-color:rgba(152,205,255,.17); background:linear-gradient(100deg,rgba(46,124,246,.12),rgba(46,124,246,.018)); }
+    .statement-band { background:linear-gradient(135deg,#092b65,#041127 72%); }
+    .statement-band em { color:#55bfff; }
+    .live-panel { background:linear-gradient(145deg,#092c68,#041127 72%); border-color:rgba(67,159,255,.42); box-shadow:0 36px 120px rgba(0,5,25,.52),0 0 70px rgba(46,124,246,.14); }
+    .live-panel::before { background:radial-gradient(circle at 85% 5%,rgba(46,124,246,.3),transparent 34%),linear-gradient(rgba(68,167,255,.075) 1px,transparent 1px),linear-gradient(90deg,rgba(68,167,255,.075) 1px,transparent 1px); background-size:auto,42px 42px,42px 42px; }
+    .live-label,.live-panel .summary { color:#b8cbe7; }
+    .live-badge { background:rgba(46,124,246,.15); color:#80d1ff; border-color:rgba(71,168,255,.38); }
+    .live-badge::before { background:#50c5ff; }
+    .status-note { border-color:rgba(67,159,255,.34); background:rgba(46,124,246,.11); color:#d6e7ff; }
+    .status-note strong,.direct { color:#65c7ff; }
+    .disclaimer { color:#8fa8c8; }
+    .closing-panel { background:radial-gradient(circle at 50% 110%,rgba(46,124,246,.34),transparent 46%),linear-gradient(145deg,#09285d,#041127); box-shadow:0 38px 120px rgba(0,4,20,.48),0 0 100px rgba(46,124,246,.16); }
+    .closing-panel::before { background:linear-gradient(rgba(72,165,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(72,165,255,.06) 1px,transparent 1px); background-size:38px 38px; }
+    .closing-panel p { color:#b8cbe7; }
+    .contact-shell { background:#04132c; border-color:rgba(66,158,255,.34); }
+    .contact-copy::after { background:rgba(46,124,246,.25); }
+    .contact-copy > p { color:#b5c9e6; }
+
+    @media (min-width:901px) {
+      .nav { border-color:rgba(116,188,255,.22); background:rgba(2,10,27,.74); box-shadow:0 18px 60px rgba(0,3,15,.38),inset 0 1px rgba(255,255,255,.035); }
+      .nav-direct { box-shadow:0 0 34px rgba(46,124,246,.28); }
+      .hero { background:radial-gradient(ellipse at 50% 14%,rgba(46,124,246,.2),transparent 36%),linear-gradient(180deg,#010615 0%,#061634 62%,var(--bg) 100%); }
+      .hero-kicker { background:rgba(6,25,60,.68); box-shadow:inset 0 1px rgba(255,255,255,.045),0 0 34px rgba(46,124,246,.15); }
+      .btn.primary { box-shadow:0 0 0 1px rgba(138,207,255,.26),0 15px 48px rgba(46,124,246,.34); }
+      .btn.primary:hover { box-shadow:0 0 0 1px rgba(198,235,255,.38),0 21px 60px rgba(46,124,246,.42); }
+      .btn.secondary { background:rgba(4,20,49,.72); }
+      .roadmap-panel { border-color:rgba(82,172,255,.42); background:linear-gradient(155deg,rgba(8,34,80,.86),rgba(2,10,26,.93)); box-shadow:0 55px 160px rgba(0,3,18,.58),0 0 110px rgba(46,124,246,.19),inset 0 1px rgba(255,255,255,.045); }
+      .roadmap-panel::after { background:rgba(46,124,246,.18); }
+      .industry-strip { background:rgba(5,22,51,.88); }
+      .process-row:nth-child(even) { background:linear-gradient(260deg,rgba(46,124,246,.13),rgba(46,124,246,.018)); }
+    }
+
+    .hero.webgl-fallback::before { background:radial-gradient(ellipse at 72% 25%,rgba(46,124,246,.31),transparent 32%),radial-gradient(ellipse at 22% 56%,rgba(27,146,255,.2),transparent 38%),linear-gradient(145deg,transparent 20%,rgba(69,183,255,.13) 43%,transparent 61%); }
+    .orbit-experience { background:#010615; }
+    .orbit-stage { perspective:1800px; perspective-origin:50% 50%; }
+    .orbit-stage::before { background:radial-gradient(circle at 50% 50%,transparent 0 17%,rgba(2,12,34,.08) 34%,rgba(1,5,18,.67) 78%),linear-gradient(135deg,rgba(2,7,21,.82) 0%,rgba(4,20,50,.28) 42%,transparent 62%,rgba(2,9,26,.6) 100%); }
+    .orbit-stage::after { inset:92px 32px 32px; border-color:rgba(93,177,255,.2); box-shadow:inset 0 0 90px rgba(0,4,18,.38),0 0 120px rgba(46,124,246,.11); }
+    .stage-core { left:50%; top:50%; width:min(46vw,650px); opacity:.7; }
+    .stage-core::before { border-color:rgba(86,182,255,.42); box-shadow:0 0 90px rgba(46,124,246,.3),inset 0 0 72px rgba(46,124,246,.18); }
+    .stage-core::after { border-color:rgba(142,220,255,.3); box-shadow:0 0 55px rgba(50,177,255,.36); }
+    .stage-core-ring { border-color:rgba(77,176,255,.34); }
+    .stage-core-label { color:rgba(211,234,255,.78); text-shadow:0 2px 20px #020a20; }
+    .stage-core-label strong { color:#f5f9ff; }
+    .orbit-scene > .orbit-ring { transform:none!important; }
+    .orbit-panel { transform:none; opacity:0; transform-origin:50% 50%; backface-visibility:hidden; }
+    .orbit-card { left:50%; top:50%; width:min(calc(100vw - 300px),980px); max-height:calc(100svh - 190px); transform:translate(-50%,-50%) translateZ(1px); padding:clamp(28px,3vw,46px); border-color:rgba(91,181,255,.4); border-radius:24px; background:linear-gradient(145deg,rgba(7,28,66,.86),rgba(2,12,34,.82)); box-shadow:0 40px 110px rgba(0,4,22,.62),0 0 0 1px rgba(75,167,255,.12),0 0 70px rgba(46,124,246,.25),inset 0 1px rgba(255,255,255,.075); scrollbar-color:rgba(75,169,255,.48) transparent; }
+    /* No backdrop-filter on the active card: it forced the browser to
+       re-blur the animated background every frame and was a major cause
+       of the desktop scroll freeze. A near-opaque card reads the same. */
+    .orbit-panel.is-active .orbit-card { background:linear-gradient(145deg,rgba(7,28,66,.96),rgba(2,12,34,.94)); }
+    .orbit-card::-webkit-scrollbar-thumb { background:rgba(75,169,255,.48); }
+    .orbit-card::after { background:linear-gradient(135deg,rgba(104,199,255,.11),transparent 34%,rgba(46,124,246,.035)); }
+    .orbit-card .orbit-lede,.orbit-item p,.orbit-step p,.orbit-about-grid p,.orbit-contact-copy p { color:#b8cce8; }
+    .orbit-item { border-color:rgba(116,195,255,.2); background:rgba(18,61,122,.32); }
+    .orbit-step { border-color:rgba(103,188,255,.24); }
+    .orbit-quote { border-color:rgba(116,195,255,.23); color:#f2f8ff; }
+    .orbit-promise { color:#b7cbe8; }
+    .orbit-promise strong { color:#f5f9ff; }
+    .orbit-live-badge { border-color:rgba(72,175,255,.4); color:#76ceff; background:rgba(46,124,246,.14); }
+    .orbit-status { border-color:rgba(81,178,255,.31); background:rgba(46,124,246,.12); color:#d3e5fb; }
+    .orbit-status strong { color:#76ceff; }
+    .orbit-disclaimer { color:#91a9c8; }
+    .orbit-founder { color:#b4c7e1; }
+    .orbit-founder::before { border-color:rgba(92,186,255,.36); }
+    .orbit-dot::before { background:rgba(166,201,236,.44); }
+    .orbit-counter { color:rgba(192,216,240,.72); }
+    .orbit-counter strong { color:#f4f8ff; }
+    .orbit-scroll-note { color:rgba(190,216,242,.65); }
+    @media (min-width:901px) and (prefers-reduced-motion:no-preference) {
+      html.orbit-ready body { background:#010615; }
+    }
+    @media (max-width:1260px) and (min-width:901px) {
+      .orbit-card { left:50%; width:min(calc(100vw - 230px),940px); }
+      .stage-core { left:50%; width:min(48vw,590px); }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav-shell">
+    <nav class="nav" aria-label="Primary navigation">
+      <div class="nav-context" aria-label="Higher Rank — Strategy and execution partner"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V7m0 5h7M11 7v11M14 18l6-6M16 7h4v5"/></svg></span><span class="context-copy">Strategy &amp; execution partner</span></div>
+      <button class="menu-btn" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-links">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="#services">Services</a><a href="#process">Process</a><a href="#live">Higher Rank Live</a><a href="#about">About</a><a class="mobile-contact" href="#contact">Contact</a>
+      </div>
+      <a class="nav-direct" href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="orbit-experience" aria-label="Higher Rank scroll experience">
+      <div class="orbit-stage">
+        <canvas id="orbit-canvas" aria-hidden="true"></canvas>
+        <div class="stage-core" aria-hidden="true"><i class="stage-core-ring"></i><i class="stage-core-ring"></i><div class="stage-core-label"><strong>Clear direction</strong>Strategy in motion</div></div>
+        <div class="orbit-scene">
+          <div class="orbit-ring" id="orbit-ring">
+            <article class="orbit-panel is-active" style="--panel-angle:0deg" data-title="Build the strategy">
+              <div class="orbit-card">
+                <p class="orbit-kicker">Strategy for the next level. Execution that moves you forward.</p>
+                <h1>Build the Strategy.<br><span class="accent">Raise the Standard.</span><br>Reach the Next Level.</h1>
+                <p class="orbit-lede">Higher Rank helps businesses, creators, and ambitious brands turn ideas into clear growth plans and plans into action. From brand strategy and digital marketing to websites, social media, partnerships, and live campaigns, we help you identify the right next move and execute it with purpose.</p>
+                <div class="actions"><a class="btn primary" href="#contact">Book a Strategy Call <span aria-hidden="true">→</span></a><a class="btn secondary" href="#services">Explore Our Services</a></div>
+                <p class="orbit-promise"><strong>Clear direction. Practical action.</strong>The right resources at every stage of growth.</p>
+              </div>
+            </article>
+
+            <article class="orbit-panel" style="--panel-angle:45deg" data-title="Services">
+              <div class="orbit-card">
+                <p class="orbit-kicker">A practical partner for growth</p>
+                <h2>Built around the next move that matters.</h2>
+                <p class="orbit-lede">Growth gets complicated when your brand, marketing, content, website, and business goals are moving in different directions. <span class="accent">Higher Rank brings those pieces together.</span> We start by understanding where you are, what you want to accomplish, and what resources you have. Then we build a focused roadmap and help connect strategy to execution.</p>
+                <div class="orbit-mini-grid">
+                  <div class="orbit-item"><span>01</span><h3>Growth Strategy &amp; Consulting</h3><p>Clarify your goals, positioning, priorities, audience, and next steps with a practical roadmap built around your business.</p></div>
+                  <div class="orbit-item"><span>02</span><h3>Brand &amp; Digital Marketing</h3><p>Create a stronger identity and a connected marketing approach across messaging, campaigns, social platforms, and customer touchpoints.</p></div>
+                  <div class="orbit-item"><span>03</span><h3>Social Media &amp; Creator Strategy</h3><p>Improve platform strategy, content direction, profile conversion, audience engagement, creator partnerships, and cross-platform consistency.</p></div>
+                  <div class="orbit-item"><span>04</span><h3>Websites, SEO &amp; Conversion</h3><p>Plan or improve a website that communicates value clearly, supports search visibility, works beautifully on mobile, and turns interest into action.</p></div>
+                  <div class="orbit-item"><span>05</span><h3>Campaigns, Sponsorships &amp; Live Experiences</h3><p>Develop memorable campaigns and events supported by promotion, partnerships, creator outreach, community engagement, and measurable follow-up.</p></div>
+                  <div class="orbit-item"><span>06</span><h3>Specialist Project Support</h3><p>When a project needs deeper expertise, Higher Rank can coordinate approved specialists while keeping the strategy and client experience connected.</p></div>
+                </div>
+                <p class="orbit-promise"><strong>Our promise</strong>Clear direction, practical action, and the right resources at every stage of growth.</p>
+              </div>
+            </article>
+
+            <article class="orbit-panel" style="--panel-angle:90deg" data-title="Process">
+              <div class="orbit-card">
+                <p class="orbit-kicker">How Higher Rank works</p>
+                <h2>Clarity first.<br>Then movement.</h2>
+                <div class="orbit-stack">
+                  <div class="orbit-step"><span>01</span><h3>Discover</h3><p>We learn about your business, audience, goals, challenges, timeline, and budget.</p></div>
+                  <div class="orbit-step"><span>02</span><h3>Map the opportunity</h3><p>We identify priorities and build a practical roadmap with recommended actions and clear ownership.</p></div>
+                  <div class="orbit-step"><span>03</span><h3>Execute</h3><p>Higher Rank supports delivery directly and coordinates approved specialists when the project requires them.</p></div>
+                  <div class="orbit-step"><span>04</span><h3>Measure and refine</h3><p>We review results, document what worked, and improve the next stage of the plan.</p></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="orbit-panel" style="--panel-angle:135deg" data-title="Clarity and movement">
+              <div class="orbit-card">
+                <p class="orbit-kicker">The Higher Rank approach</p>
+                <p class="orbit-statement">Good consulting creates <em>clarity.</em> Good marketing creates <em>movement.</em> The strongest work does both.</p>
+                <div class="orbit-quote"><strong>Ideas are useful. <span class="accent">Execution is the proof.</span></strong><br>Higher Rank applies the same strategy it recommends to clients through real campaigns, partnerships, content, and live projects.</div>
+                <div class="actions"><a class="btn primary" href="#live">See Higher Rank Live</a><a class="btn secondary" href="#contact">Start a Conversation</a></div>
+              </div>
+            </article>
+
+            <article class="orbit-panel" style="--panel-angle:180deg" data-title="Who we work with">
+              <div class="orbit-card">
+                <p class="orbit-kicker">Who we work with</p>
+                <h2>Ambition at every stage.</h2>
+                <div class="orbit-mini-grid orbit-audience">
+                  <div class="orbit-item"><span>01</span><p>Small and growing businesses that need clearer marketing, positioning, and execution.</p></div>
+                  <div class="orbit-item"><span>02</span><p>Creators, streamers, artists, and personal brands ready to operate more professionally.</p></div>
+                  <div class="orbit-item"><span>03</span><p>Entrepreneurs moving from an idea or early-stage project into a real business.</p></div>
+                  <div class="orbit-item"><span>04</span><p>Established organizations that need campaign, website, SEO, sponsorship, event, or specialist support.</p></div>
+                </div>
+                <p class="orbit-quote"><strong>A cross-functional point of view.</strong><br>Experience across financial services, healthcare, business development, telecommunications, media, sponsorships, and live events informs Higher Rank's practical, cross-functional approach.</p>
+                <p class="orbit-proof"><strong class="accent">The right expertise for the project.</strong> Higher Rank leads the strategy and helps define the work. When a project requires specialized expertise, we can recommend or coordinate qualified collaborators with the client's approval.</p>
+              </div>
+            </article>
+
+            <article class="orbit-panel" style="--panel-angle:225deg" data-title="Higher Rank Live">
+              <div class="orbit-card">
+                <div class="orbit-live-top"><p class="orbit-kicker" style="margin:0">Higher Rank Live · Featured project</p><span class="orbit-live-badge">IN DEVELOPMENT</span></div>
+                <h2>Higher Rank Fortnite Tournament</h2>
+                <p class="orbit-lede">Higher Rank Live turns strategy into public-facing projects. Higher Rank is creating, sponsoring, and producing its first Fortnite competition, with additional events planned. The event will combine competitive Zero Build play with creator participation, community promotion, sponsor visibility, and a polished digital experience.</p>
+                <p class="orbit-status"><strong>The next level is loading.</strong> Higher Rank's first Fortnite competition is in development. Event format, scheduling, participating teams, sponsors, prize details, and registration information will be announced when confirmed.</p>
+                <p class="orbit-disclaimer">This is an independent community event and is not sponsored, endorsed, or administered by Epic Games.</p>
+                <div class="actions"><a class="btn primary" href="#contact">Partner With Higher Rank Live</a><a class="btn secondary" href="#contact">Get Event Updates</a></div>
+              </div>
+            </article>
+
+            <article class="orbit-panel" style="--panel-angle:270deg" data-title="About Higher Rank">
+              <div class="orbit-card">
+                <p class="orbit-kicker">About Higher Rank</p>
+                <h2>Built for ambition.<br>Grounded in the next move.</h2>
+                <div class="orbit-about-grid">
+                  <p>Higher Rank was created for people with ambition who need clearer direction and stronger execution. We work with business owners, creators, entrepreneurs, and growing brands that are ready to move beyond disconnected ideas and build something more focused.</p>
+                  <div><p class="orbit-quote" style="margin-top:0">Good consulting creates clarity. Good marketing creates movement. The strongest work does both.</p><p class="orbit-founder">Higher Rank is led by Nick Young.</p></div>
+                </div>
+                <p class="orbit-quote"><strong>You do not need more scattered advice. You need a clear next move.</strong><br>Tell us where you are, where you want to go, and what is getting in the way. We will help you define the opportunity and build a practical path forward.</p>
+                <div class="actions"><a class="btn primary" href="#contact">Start a Conversation</a></div>
+              </div>
+            </article>
+
+            <article class="orbit-panel" style="--panel-angle:315deg" data-title="Contact">
+              <div class="orbit-card orbit-contact-card">
+                <p class="orbit-kicker">Contact / Strategy call</p>
+                <h2>Let's identify the next move.</h2>
+                <div class="orbit-contact-layout">
+                  <div class="orbit-contact-copy"><p>Tell Higher Rank where you are, what you are trying to build, and what is getting in the way. The first conversation is designed to understand the opportunity, clarify priorities, and determine whether Higher Rank is the right fit to help.</p><a class="direct" href="mailto:N.Young@HigherRankMedia.com">N.Young@HigherRankMedia.com <span aria-hidden="true">↗</span></a></div>
+                  <form class="contact-form" id="orbit-strategy-form">
+                    <div class="field-row"><div class="field"><label for="orbit-name">Name</label><input id="orbit-name" name="name" autocomplete="name" required /></div><div class="field"><label for="orbit-email">Email</label><input id="orbit-email" name="email" type="email" autocomplete="email" required /></div></div>
+                    <div class="field"><label for="orbit-business">Business / brand name</label><input id="orbit-business" name="business" autocomplete="organization" /></div>
+                    <div class="field-row"><div class="field"><label for="orbit-goal">What are you trying to accomplish?</label><textarea id="orbit-goal" name="goal" required></textarea></div><div class="field"><label for="orbit-blocker">What's getting in the way?</label><textarea id="orbit-blocker" name="blocker" required></textarea></div></div>
+                    <button class="btn primary form-btn" type="submit">Open My Email <span aria-hidden="true">→</span></button>
+                    <p class="response-note" data-form-note aria-live="polite">Your email app will open with your message ready to review and send.</p>
+                  </form>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="orbit-progress" role="navigation" aria-label="Carousel sections"></div>
+        <div class="orbit-counter"><strong id="orbit-count">01 / 08</strong><span id="orbit-title">Build the strategy</span></div>
+        <div class="orbit-scroll-note">Scroll to rotate</div>
+      </div>
+    </section>
+
+    <div class="stacked-site">
+    <section class="hero" aria-labelledby="hero-title">
+      <canvas id="trail-canvas" aria-hidden="true"></canvas>
+      <div class="hero-ribbons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="wrap hero-inner">
+        <div class="hero-kicker"><i></i> Strategy for the next level. Execution that moves you forward.</div>
+        <h1 id="hero-title" class="gradient-text">Build the Strategy.<br>Raise the Standard.<br>Reach the Next Level.</h1>
+        <p class="hero-copy">Higher Rank helps businesses, creators, and ambitious brands turn ideas into clear growth plans and plans into action. From brand strategy and digital marketing to websites, social media, partnerships, and live campaigns, we help you identify the right next move and execute it with purpose.</p>
+        <div class="actions">
+          <a class="btn primary" href="#contact">Book a Strategy Call <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn secondary" href="#services">Explore Our Services</a>
+        </div>
+        <div class="roadmap-panel" aria-label="Higher Rank growth roadmap: Discover, Map, Execute, Measure">
+          <div class="roadmap-top"><span class="roadmap-label">Growth roadmap</span><span class="roadmap-status">A clear path forward</span></div>
+          <div class="roadmap-flow">
+            <div class="roadmap-node"><div class="roadmap-dot">01</div><strong>Discover</strong><small>Understand the opportunity</small></div>
+            <div class="roadmap-node"><div class="roadmap-dot">02</div><strong>Map</strong><small>Set priorities and ownership</small></div>
+            <div class="roadmap-node"><div class="roadmap-dot">03</div><strong>Execute</strong><small>Put the plan into motion</small></div>
+            <div class="roadmap-node"><div class="roadmap-dot">04</div><strong>Measure</strong><small>Refine the next stage</small></div>
+          </div>
+        </div>
+        <div class="hero-foot">
+          <p><strong>Clear direction. Practical action.</strong>The right resources at every stage of growth.</p>
+          <div class="scroll-cue"><span></span> Scroll to explore</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="industry-strip" aria-label="Industry experience">
+      <div class="wrap"><p>Experience across financial services · healthcare · business development · telecommunications · media · sponsorships · live events</p></div>
+    </div>
+
+    <section class="section" aria-labelledby="partner-title">
+      <div class="wrap partner-layout reveal">
+        <div>
+          <p class="eyebrow">Growth, connected</p>
+          <h2 id="partner-title">A Practical Partner for Growth</h2>
+        </div>
+        <div>
+          <p class="partner-statement">Growth gets complicated when your brand, marketing, content, website, and business goals are moving in different directions. <em>Higher Rank brings those pieces together.</em></p>
+          <p class="lede" style="margin-top:28px">We start by understanding where you are, what you want to accomplish, and what resources you have. Then we build a focused roadmap and help connect strategy to execution.</p>
+          <div class="promise"><strong>Our promise</strong>Clear direction, practical action, and the right resources at every stage of growth.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="services" aria-labelledby="services-title">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow">Services overview</p>
+          <h2 id="services-title">Built around the next move that matters.</h2>
+        </div>
+        <div class="grid bento-services">
+          <article class="card service-card reveal"><div class="card-num">01 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 18V8m6 10V4m6 14v-6m4 6H2"/></svg></div><div class="service-visual signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div><h3>Growth Strategy &amp; Consulting</h3><p>Clarify your goals, positioning, priorities, audience, and next steps with a practical roadmap built around your business.</p></article>
+          <article class="card service-card reveal"><div class="card-num">02 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 19L19 5M7 5h12v12"/></svg></div><h3>Brand &amp; Digital Marketing</h3><p>Create a stronger identity and a connected marketing approach across messaging, campaigns, social platforms, and customer touchpoints.</p></article>
+          <article class="card service-card reveal"><div class="card-num">03 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg></div><h3>Social Media &amp; Creator Strategy</h3><p>Improve platform strategy, content direction, profile conversion, audience engagement, creator partnerships, and cross-platform consistency.</p></article>
+          <article class="card service-card reveal"><div class="card-num">04 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 7h.01"/></svg></div><div class="service-visual orbit-mini" aria-hidden="true"></div><h3>Websites, SEO &amp; Conversion</h3><p>Plan or improve a website that communicates value clearly, supports search visibility, works beautifully on mobile, and turns interest into action.</p></article>
+          <article class="card service-card reveal"><div class="card-num">05 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 14s1-1 4-1 5 3 8 3 4-1 4-1V5s-1 1-4 1-5-3-8-3-4 1-4 1z"/><path d="M4 22V14"/></svg></div><h3>Campaigns, Sponsorships &amp; Live Experiences</h3><p>Develop memorable campaigns and events supported by promotion, partnerships, creator outreach, community engagement, and measurable follow-up.</p></article>
+          <article class="card service-card reveal"><div class="card-num">06 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg></div><h3>Specialist Project Support</h3><p>When a project needs deeper expertise, Higher Rank can coordinate approved specialists while keeping the strategy and client experience connected.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section process" id="process" aria-labelledby="process-title">
+      <div class="wrap">
+        <div class="section-head reveal"><p class="eyebrow">How Higher Rank works</p><h2 id="process-title">Clarity first. Then movement.</h2></div>
+        <div class="process-list">
+          <div class="process-row reveal"><div class="step-num">01</div><h3>Discover</h3><p>We learn about your business, audience, goals, challenges, timeline, and budget.</p></div>
+          <div class="process-row reveal"><div class="step-num">02</div><h3>Map the opportunity</h3><p>We identify priorities and build a practical roadmap with recommended actions and clear ownership.</p></div>
+          <div class="process-row reveal"><div class="step-num">03</div><h3>Execute</h3><p>Higher Rank supports delivery directly and coordinates approved specialists when the project requires them.</p></div>
+          <div class="process-row reveal"><div class="step-num">04</div><h3>Measure and refine</h3><p>We review results, document what worked, and improve the next stage of the plan.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="statement-band" aria-label="Higher Rank approach">
+      <div class="wrap reveal"><p>Good consulting creates <em>clarity.</em> Good marketing creates <em>movement.</em> The strongest work does both.</p></div>
+    </section>
+
+    <section class="section" aria-labelledby="audience-title">
+      <div class="wrap">
+        <div class="section-head reveal"><p class="eyebrow">Who we work with</p><h2 id="audience-title">Ambition at every stage.</h2></div>
+        <div class="audience-grid">
+          <article class="card audience-card reveal"><span class="audience-num">01</span><p>Small and growing businesses that need clearer marketing, positioning, and execution.</p></article>
+          <article class="card audience-card reveal"><span class="audience-num">02</span><p>Creators, streamers, artists, and personal brands ready to operate more professionally.</p></article>
+          <article class="card audience-card reveal"><span class="audience-num">03</span><p>Entrepreneurs moving from an idea or early-stage project into a real business.</p></article>
+          <article class="card audience-card reveal"><span class="audience-num">04</span><p>Established organizations that need campaign, website, SEO, sponsorship, event, or specialist support.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="proof-title">
+      <div class="wrap proof-layout reveal">
+        <div><p class="eyebrow">Proof of execution</p><h2 id="proof-title">Ideas are useful.<br><span class="accent">Execution is the proof.</span></h2><p class="lede" style="margin-top:24px">Higher Rank applies the same strategy it recommends to clients through real campaigns, partnerships, content, and live projects.</p></div>
+        <div class="actions proof-actions"><a class="btn primary" href="#live">See Higher Rank Live</a><a class="btn secondary" href="#contact">Start a Conversation</a></div>
+      </div>
+    </section>
+
+    <section class="section" id="live" aria-labelledby="live-title">
+      <div class="wrap">
+        <div class="section-head reveal"><p class="eyebrow">Higher Rank Live</p><h2 id="live-title">Strategy, made public.</h2><p class="lede" style="margin-top:20px">Higher Rank Live turns strategy into public-facing projects.</p></div>
+        <article class="live-panel reveal">
+          <div class="live-top"><span class="live-label">Featured project · In development</span><span class="live-badge">LIVE</span></div>
+          <div class="live-content">
+            <div>
+              <h3>Higher Rank Fortnite Tournament</h3>
+              <p class="summary">Higher Rank is creating, sponsoring, and producing its first Fortnite competition, with additional events planned. The event will combine competitive Zero Build play with creator participation, community promotion, sponsor visibility, and a polished digital experience.</p>
+              <p class="status-note"><strong>The next level is loading.</strong> Higher Rank's first Fortnite competition is in development. Event format, scheduling, participating teams, sponsors, prize details, and registration information will be announced when confirmed.</p>
+              <p class="disclaimer">This is an independent community event and is not sponsored, endorsed, or administered by Epic Games.</p>
+            </div>
+            <div class="live-actions"><a class="btn primary" href="#contact">Partner With Higher Rank Live</a><a class="btn secondary" href="#contact" style="color:#f4fff8">Get Event Updates</a></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="cred-title">
+      <div class="wrap">
+        <div class="section-head reveal"><p class="eyebrow">Experience &amp; credibility</p><h2 id="cred-title">A cross-functional point of view.</h2></div>
+        <div class="cred-grid">
+          <article class="card cred-main reveal"><svg class="giant-mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 47L28 31l9 9 16-19"/><path d="M39 21h14v14"/></svg><p>Experience across financial services, healthcare, business development, telecommunications, media, sponsorships, and live events informs Higher Rank's practical, cross-functional approach.</p></article>
+          <article class="network reveal"><span class="network-tag">Specialist network</span><h3>The right expertise for the project.</h3><p>Higher Rank leads the strategy and helps define the work. When a project requires specialized expertise, we can recommend or coordinate qualified collaborators with the client's approval.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about" id="about" aria-labelledby="about-title">
+      <div class="wrap about-layout">
+        <div class="about-orbit reveal" aria-hidden="true"><div class="orbit-ring one"></div><div class="orbit-ring two"></div><div class="orbit-core">CLARITY<br><span class="accent">→</span><br>MOVEMENT</div></div>
+        <div class="about-copy reveal"><p class="eyebrow">About Higher Rank</p><h2 id="about-title">Built for ambition.<br>Grounded in the next move.</h2><p>Higher Rank was created for people with ambition who need clearer direction and stronger execution. We work with business owners, creators, entrepreneurs, and growing brands that are ready to move beyond disconnected ideas and build something more focused.</p><p class="quote">Good consulting creates clarity. Good marketing creates movement. The strongest work does both.</p><p class="founder">Higher Rank is led by Nick Young.</p><div class="actions"><a class="btn primary" href="#contact">Start a Conversation</a></div></div>
+      </div>
+    </section>
+
+    <section class="closing-cta" aria-labelledby="closing-title">
+      <div class="wrap"><div class="closing-panel reveal">
+        <h2 id="closing-title">You do not need more scattered advice. You need a clear next move.</h2>
+        <p>Tell us where you are, where you want to go, and what is getting in the way. We will help you define the opportunity and build a practical path forward.</p>
+        <div class="actions"><a class="btn primary" href="#contact">Book a Strategy Call <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      </div></div>
+    </section>
+
+    <section class="section contact" id="contact" aria-labelledby="contact-title">
+      <div class="wrap contact-shell reveal">
+        <div class="contact-copy"><p class="eyebrow">Contact / Strategy call</p><h2 id="contact-title">Let's identify the next move.</h2><p>Tell Higher Rank where you are, what you are trying to build, and what is getting in the way. The first conversation is designed to understand the opportunity, clarify priorities, and determine whether Higher Rank is the right fit to help.</p><a class="direct" href="mailto:N.Young@HigherRankMedia.com">N.Young@HigherRankMedia.com <span aria-hidden="true">↗</span></a></div>
+        <form class="contact-form" id="strategy-form">
+          <div class="field-row"><div class="field"><label for="name">Name</label><input id="name" name="name" aria-label="Name" autocomplete="name" required /></div><div class="field"><label for="email">Email</label><input id="email" name="email" aria-label="Email" type="email" autocomplete="email" required /></div></div>
+          <div class="field"><label for="business">Business / brand name</label><input id="business" name="business" aria-label="Business or brand name" autocomplete="organization" /></div>
+          <div class="field"><label for="goal">What are you trying to accomplish?</label><textarea id="goal" name="goal" aria-label="What are you trying to accomplish?" required></textarea></div>
+          <div class="field"><label for="blocker">What's getting in the way?</label><textarea id="blocker" name="blocker" aria-label="What's getting in the way?" required></textarea></div>
+          <button class="btn primary form-btn" type="submit">Open My Email <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <p class="response-note" id="form-note" aria-live="polite">Your email app will open with your message ready to review and send.</p>
+        </form>
+      </div>
+    </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-top"><div><p class="footer-desc">Higher Rank helps businesses, creators, entrepreneurs, and ambitious brands turn ideas into clear growth plans and practical execution.</p><a class="footer-email" href="mailto:N.Young@HigherRankMedia.com">N.Young@HigherRankMedia.com</a></div><nav class="footer-links" aria-label="Footer navigation"><a href="#services">Services</a><a href="#process">Process</a><a href="#live">Higher Rank Live</a><a href="#about">About</a><a href="#contact">Contact</a></nav></div>
+      <div class="footer-bottom"><span>© 2026 Higher Rank. All rights reserved.</span><span>Strategy for the next level. Execution that moves you forward.</span></div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var menuButton = document.querySelector('.menu-btn');
+      var navLinks = document.getElementById('nav-links');
+      menuButton.addEventListener('click', function () {
+        var open = navLinks.classList.toggle('open');
+        menuButton.setAttribute('aria-expanded', String(open));
+        menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      });
+      navLinks.addEventListener('click', function (event) {
+        if (event.target.tagName === 'A') {
+          navLinks.classList.remove('open');
+          menuButton.setAttribute('aria-expanded', 'false');
+          menuButton.setAttribute('aria-label', 'Open navigation');
+        }
+      });
+
+      var revealItems = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { entry.target.classList.add('visible'); entry.target.classList.remove('will-reveal'); observer.unobserve(entry.target); }
+          });
+        }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
+        revealItems.forEach(function (item) {
+          var rect = item.getBoundingClientRect();
+          if (rect.top > window.innerHeight * 1.15) item.classList.add('will-reveal');
+          else item.classList.add('visible');
+          observer.observe(item);
+        });
+      } else { revealItems.forEach(function (item) { item.classList.add('visible'); }); }
+
+      var form = document.getElementById('strategy-form');
+      var note = document.getElementById('form-note');
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        var data = new FormData(form);
+        var subject = 'Higher Rank Strategy Call — ' + (data.get('business') || data.get('name'));
+        var body = [
+          'Name: ' + data.get('name'),
+          'Email: ' + data.get('email'),
+          'Business / brand name: ' + (data.get('business') || 'Not provided'),
+          '',
+          'What I am trying to accomplish:', data.get('goal'),
+          '',
+          "What's getting in the way:", data.get('blocker')
+        ].join('\n');
+        note.textContent = 'Thank you for reaching out to Higher Rank. We will review your message and respond with the next step.';
+        window.location.href = 'mailto:N.Young@HigherRankMedia.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      });
+
+      var canvas = document.getElementById('trail-canvas');
+      var hero = document.querySelector('.hero');
+      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var compactScreen = window.matchMedia('(max-width: 767px)').matches;
+
+      function useStaticHero() {
+        hero.classList.add('webgl-fallback');
+        canvas.style.display = 'none';
+      }
+
+      if (reduceMotion || compactScreen || !window.THREE) {
+        useStaticHero();
+      } else {
+        try {
+          var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
+          renderer.setClearColor(0x000000, 0);
+          renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+          var scene = new THREE.Scene();
+          var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+          camera.position.z = 2;
+          var uniforms = {
+            uTime: { value: 0 },
+            uAspect: { value: 1 },
+            uMouse: { value: new THREE.Vector2(0, 0) }
+          };
+          var plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2),
+            new THREE.ShaderMaterial({
+              transparent: true,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+              uniforms: uniforms,
+              vertexShader: [
+                'varying vec2 vUv;',
+                'void main(){',
+                '  vUv = uv;',
+                '  gl_Position = vec4(position, 1.0);',
+                '}'
+              ].join('\n'),
+              fragmentShader: [
+                'precision highp float;',
+                'varying vec2 vUv;',
+                'uniform float uTime;',
+                'uniform float uAspect;',
+                'uniform vec2 uMouse;',
+                'float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123); }',
+                'float noise(vec2 p){',
+                '  vec2 i=floor(p), f=fract(p);',
+                '  f=f*f*(3.0-2.0*f);',
+                '  return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);',
+                '}',
+                'float ribbon(vec2 p,float y,float thick,float phase){',
+                '  float bend=sin(p.x*2.15+uTime*.22+phase)*.105;',
+                '  bend+=sin(p.x*5.4-uTime*.15+phase*1.7)*.025;',
+                '  bend+=(noise(vec2(p.x*1.55+uTime*.035,phase))-0.5)*.075;',
+                '  float d=abs(p.y-y-bend);',
+                '  float core=smoothstep(thick,0.0,d);',
+                '  float glow=smoothstep(thick*7.0,0.0,d)*.23;',
+                '  return core+glow;',
+                '}',
+                'void main(){',
+                '  vec2 p=vUv-.5;',
+                '  p.x*=uAspect;',
+                '  p+=uMouse*vec2(.08,.045);',
+                '  p.y+=p.x*.12;',
+                '  float r=0.0;',
+                '  r+=ribbon(p,-.19,.005,0.0)*.62;',
+                '  r+=ribbon(p,-.07,.007,1.8)*1.0;',
+                '  r+=ribbon(p,.055,.004,3.9)*.72;',
+                '  r+=ribbon(p,.17,.006,5.3)*.48;',
+                '  float sweep=smoothstep(.8,-.45,p.x);',
+                '  float halo=exp(-5.5*length(p-vec2(.16,.02)))*.24;',
+                '  vec3 emerald=mix(vec3(.02,.28,.17),vec3(.18,1.0,.61),clamp(r,0.0,1.0));',
+                '  float alpha=clamp((r*.9+halo)*sweep,0.0,.88);',
+                '  gl_FragColor=vec4(emerald*(r+halo),alpha);',
+                '}'
+              ].join('\n')
+            })
+          );
+          scene.add(plane);
+
+          var particleCount = 170;
+          var particlePositions = new Float32Array(particleCount * 3);
+          var particleSpeed = new Float32Array(particleCount);
+          for (var p = 0; p < particleCount; p++) {
+            particlePositions[p * 3] = Math.random() * 2.4 - 1.2;
+            particlePositions[p * 3 + 1] = Math.random() * 2.0 - 1.0;
+            particlePositions[p * 3 + 2] = Math.random() * .7 + .05;
+            particleSpeed[p] = .00012 + Math.random() * .00028;
+          }
+          var particleGeometry = new THREE.BufferGeometry();
+          particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+          var particles = new THREE.Points(particleGeometry, new THREE.PointsMaterial({
+            color: 0x62f3b0,
+            size: 1.35,
+            sizeAttenuation: false,
+            transparent: true,
+            opacity: .55,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+          }));
+          scene.add(particles);
+
+          var targetMouse = new THREE.Vector2(0, 0);
+          var heroVisible = true;
+          var frameRequest = 0;
+          var start = performance.now();
+
+          function resizeWebGL() {
+            var rect = hero.getBoundingClientRect();
+            var width = Math.max(1, Math.floor(rect.width));
+            var height = Math.max(1, Math.floor(rect.height));
+            renderer.setSize(width, height, false);
+            uniforms.uAspect.value = width / height;
+          }
+
+          function renderWebGL(now) {
+            frameRequest = 0;
+            if (!heroVisible || document.hidden) return;
+            uniforms.uTime.value = (now - start) * .001;
+            uniforms.uMouse.value.lerp(targetMouse, .035);
+            var position = particleGeometry.attributes.position;
+            for (var i = 0; i < particleCount; i++) {
+              var ix = i * 3;
+              position.array[ix] += particleSpeed[i];
+              position.array[ix + 1] += Math.sin(now * .00015 + i) * .00006;
+              if (position.array[ix] > 1.22) position.array[ix] = -1.22;
+            }
+            position.needsUpdate = true;
+            particles.rotation.z = uniforms.uMouse.value.x * .018;
+            renderer.render(scene, camera);
+            frameRequest = requestAnimationFrame(renderWebGL);
+          }
+
+          function startWebGL() {
+            if (!frameRequest && heroVisible && !document.hidden) frameRequest = requestAnimationFrame(renderWebGL);
+          }
+
+          hero.addEventListener('pointermove', function (event) {
+            var rect = hero.getBoundingClientRect();
+            targetMouse.set((event.clientX - rect.left) / rect.width - .5, .5 - (event.clientY - rect.top) / rect.height);
+          }, { passive: true });
+          hero.addEventListener('pointerleave', function () { targetMouse.set(0, 0); }, { passive: true });
+
+          if ('ResizeObserver' in window) new ResizeObserver(resizeWebGL).observe(hero);
+          else window.addEventListener('resize', resizeWebGL, { passive: true });
+
+          if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (entries) {
+              heroVisible = entries[0].isIntersecting;
+              if (heroVisible) startWebGL();
+              else if (frameRequest) { cancelAnimationFrame(frameRequest); frameRequest = 0; }
+            }, { threshold: .01 }).observe(hero);
+          }
+          document.addEventListener('visibilitychange', startWebGL);
+          canvas.addEventListener('webglcontextlost', function (event) {
+            event.preventDefault();
+            heroVisible = false;
+            if (frameRequest) cancelAnimationFrame(frameRequest);
+            useStaticHero();
+          }, false);
+
+          resizeWebGL();
+          startWebGL();
+        } catch (error) {
+          useStaticHero();
+        }
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      var orbitExperience = document.querySelector('.orbit-experience');
+      var desktopQuery = window.matchMedia('(min-width: 901px) and (prefers-reduced-motion: no-preference)');
+      if (!orbitExperience || !desktopQuery.matches) return;
+
+      var canvas = document.getElementById('orbit-canvas');
+
+      /* The panel flight is self-contained; WebGL capability gates the cinematic desktop experience. */
+      if (!window.THREE) {
+        var webglProbe = document.createElement('canvas');
+        var webglAvailable = false;
+        try { webglAvailable = !!(webglProbe.getContext('webgl') || webglProbe.getContext('experimental-webgl')); } catch (error) { webglAvailable = false; }
+        if (!webglAvailable) return;
+        document.documentElement.classList.add('orbit-ready');
+        var fallbackRing = document.getElementById('orbit-ring');
+        var fallbackPanels = Array.prototype.slice.call(document.querySelectorAll('.orbit-panel'));
+        var fallbackProgress = document.querySelector('.orbit-progress');
+        var fallbackCount = document.getElementById('orbit-count');
+        var fallbackTitle = document.getElementById('orbit-title');
+        var fallbackDots = [];
+        var fallbackTarget = 0;
+        var fallbackDisplay = 0;
+        var ctx = canvas.getContext('2d');
+        var canvasRatio = Math.min(window.devicePixelRatio || 1, 1);
+        var fallbackBg = document.createElement('canvas');
+
+        fallbackPanels.forEach(function (panel, index) {
+          var dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'orbit-dot' + (index === 0 ? ' is-active' : '');
+          dot.setAttribute('aria-label', 'Go to ' + panel.getAttribute('data-title'));
+          dot.addEventListener('click', function () { fallbackGo(index); });
+          fallbackProgress.appendChild(dot);
+          fallbackDots.push(dot);
+        });
+
+        function fallbackEase(value) {
+          var low = Math.floor(value), fraction = value - low;
+          if (low >= fallbackPanels.length - 1) return fallbackPanels.length - 1;
+          if (fraction <= .1) return low;
+          if (fraction >= .9) return low + 1;
+          var t = (fraction - .1) / .8;
+          return low + t * t * (3 - 2 * t);
+        }
+        function fallbackTargetFromScroll() {
+          var distance = Math.max(1, orbitExperience.offsetHeight - window.innerHeight);
+          var raw = Math.max(0, Math.min(1, (window.scrollY - orbitExperience.offsetTop) / distance));
+          fallbackTarget = fallbackEase(raw * (fallbackPanels.length - 1));
+        }
+        function fallbackGo(index) {
+          var distance = orbitExperience.offsetHeight - window.innerHeight;
+          window.scrollTo({ top: orbitExperience.offsetTop + distance * index / (fallbackPanels.length - 1), behavior:'smooth' });
+        }
+        function fallbackResize() {
+          canvas.width = Math.floor(window.innerWidth * canvasRatio);
+          canvas.height = Math.floor(window.innerHeight * canvasRatio);
+          canvas.style.width = window.innerWidth + 'px';
+          canvas.style.height = window.innerHeight + 'px';
+          ctx.setTransform(canvasRatio,0,0,canvasRatio,0,0);
+          /* Pre-render the static background gradient once per resize; the
+             per-frame paint then just blits it instead of rebuilding a
+             full-screen radial gradient 60 times a second. */
+          fallbackBg.width = canvas.width;
+          fallbackBg.height = canvas.height;
+          var bgCtx = fallbackBg.getContext('2d');
+          var bgGrad = bgCtx.createRadialGradient(canvas.width*.5,canvas.height*.5,0,canvas.width*.5,canvas.height*.5,Math.max(canvas.width,canvas.height)*.78);
+          bgGrad.addColorStop(0,'#0a3478'); bgGrad.addColorStop(.28,'#061838'); bgGrad.addColorStop(1,'#010615');
+          bgCtx.fillStyle = bgGrad; bgCtx.fillRect(0,0,canvas.width,canvas.height);
+          fallbackStaticDrawn = false;
+          fallbackTargetFromScroll();
+          fallbackKick();
+        }
+        function fallbackArtwork(now, velocity) {
+          var w = window.innerWidth, h = window.innerHeight;
+          /* Blit the pre-rendered background (opaque, so it also clears). */
+          ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+          ctx.drawImage(fallbackBg,0,0);
+          ctx.restore();
+          var cx=w*.5, cy=h*.5, t=now*.00034;
+          var boost=Math.min(.2,Math.abs(velocity)*2);
+          ctx.save(); ctx.globalCompositeOperation='lighter';
+          ctx.translate(cx,cy); ctx.rotate(-Math.PI/5.2); ctx.translate(-cx,-cy);
+          for(var i=0;i<6;i++){
+            var offset=(i-2.5)*34;
+            var alpha=.22+i*.026+boost;
+            /* Glow is faked with a wide low-alpha under-stroke: canvas
+               shadowBlur forces a full-surface software blur per stroke
+               and was the main cause of the scroll freezing on desktop. */
+            ctx.beginPath();
+            ctx.moveTo(-w*.18,cy+offset+Math.sin(t+i)*18);
+            ctx.bezierCurveTo(w*.2,cy-95+offset,w*.76,cy+95+offset,w*1.18,cy+Math.cos(t+i)*22+offset);
+            ctx.strokeStyle='rgba('+(46+i*8)+','+(124+i*15)+',255,'+(alpha*.30)+')';
+            ctx.lineWidth=i===2?7.5:3.6;
+            ctx.stroke();
+            ctx.strokeStyle='rgba('+(46+i*8)+','+(124+i*15)+',255,'+alpha+')';
+            ctx.lineWidth=i===2?2.4:1.15;
+            ctx.stroke();
+          }
+          for(var j=0;j<3;j++){
+            var radius=Math.min(w,h)*(.12+j*.055);
+            ctx.beginPath(); ctx.ellipse(cx,cy,radius,radius*.43,t*(j%2?1:-1)+j*.9,0,Math.PI*2);
+            ctx.strokeStyle='rgba(91,195,255,'+(.24-j*.045)+')';
+            ctx.lineWidth=1; ctx.stroke();
+          }
+          ctx.restore();
+          /* Helical ribbon: a candy-cane stripe winding down the stage axis,
+             rotating in step with the panels' spiral position. Drawn as one
+             path per brightness band instead of ~110 individually
+             shadow-blurred segments. */
+          ctx.save(); ctx.globalCompositeOperation='lighter';
+          var helixPhase=fallbackDisplay*1.83;
+          var helixR=Math.min(w,h)*.335;
+          var helixSteps=84;
+          var helixBoost=Math.min(.12,Math.abs(velocity)*1.4);
+          for(var band=0;band<3;band++){
+            ctx.beginPath();
+            for(var hs=0;hs<helixSteps;hs++){
+              var hp0=hs/helixSteps, hp1=(hs+1)/helixSteps;
+              var ha0=hp0*Math.PI*2*2.15+helixPhase;
+              var ha1=hp1*Math.PI*2*2.15+helixPhase;
+              var hFront=(Math.cos(ha0)+1)/2;
+              if (Math.abs(hFront-(band*.5+.25))>.30) continue;
+              ctx.moveTo(cx+Math.sin(ha0)*helixR,h*.05+hp0*h*.9);
+              ctx.lineTo(cx+Math.sin(ha1)*helixR,h*.05+hp1*h*.9);
+            }
+            ctx.strokeStyle='rgba(96,190,255,'+(.05+(band*.5+.25)*.26+helixBoost)+')';
+            ctx.lineWidth=.8+(band*.5+.25)*1.7;
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        var fallbackVisible = true;
+        var fallbackRunning = false;
+        var fallbackLastTime = 0;
+        var fallbackLastNearest = -1;
+        var fallbackLastArt = 0;
+        var fallbackEma = 16.7;
+        var fallbackFrames = 0;
+        var fallbackLowPower = false;
+        var fallbackStaticDrawn = false;
+        function fallbackKick() {
+          if (!fallbackRunning && fallbackVisible && !document.hidden) {
+            fallbackRunning = true;
+            fallbackLastTime = 0;
+            requestAnimationFrame(fallbackFrame);
+          }
+        }
+        function fallbackFrame(now) {
+          if (!fallbackVisible || document.hidden) { fallbackRunning = false; return; }
+          /* Time-based damping: the old per-frame lerp (display += delta*.15)
+             tied motion speed to frame rate, so on any machine that dropped
+             frames the panels crawled slower and slower and appeared to stop.
+             Damping by elapsed time keeps the pace identical at any fps. */
+          var dt = fallbackLastTime ? Math.min(64, now - fallbackLastTime) : 16.7;
+          fallbackLastTime = now;
+          /* Adaptive safety net: if frames stay slow despite the cheap
+             compositing above (very weak GPU / software rasterizer), drop
+             to a static background and let the loop sleep whenever the
+             panels settle, so the page can never grind to a halt. */
+          fallbackEma = fallbackEma * .95 + dt * .05;
+          fallbackFrames++;
+          if (!fallbackLowPower && fallbackFrames > 45 && fallbackEma > 28) {
+            fallbackLowPower = true;
+            fallbackStaticDrawn = false;
+          }
+          var before = fallbackDisplay;
+          var delta = fallbackTarget - fallbackDisplay;
+          fallbackDisplay += delta * (1 - Math.pow(.82, dt / 16.7));
+          if (Math.abs(fallbackTarget - fallbackDisplay) < .0004) fallbackDisplay = fallbackTarget;
+          var settled = fallbackDisplay === fallbackTarget;
+          var velocity = fallbackDisplay - before;
+          fallbackRing.style.transform = 'none';
+          var nearest = Math.max(0,Math.min(fallbackPanels.length-1,Math.round(fallbackDisplay)));
+          fallbackPanels.forEach(function(panel,index){
+            var offset=index-fallbackDisplay;
+            var distance=Math.abs(offset);
+            /* Helical path: each panel rides a candy-cane stripe around the
+               stage's central vertical axis, descending as it travels.
+               offset +1.6 -> small, dim, high and behind the axis;
+               offset 0    -> front-center, flat, full size, razor sharp;
+               offset -1.6 -> small, dim, low, gone around the far side. */
+            var theta=offset*1.83;
+            var cosT=Math.cos(theta), sinT=Math.sin(theta);
+            var frontness=(cosT+1)/2;
+            var focus=Math.pow(Math.max(0,cosT),1.25);
+            var depthDim=.3+.7*frontness;
+            var distFade=Math.max(0,Math.min(1,1.2-distance*.68));
+            var opacity=depthDim*distFade;
+            if (opacity<=0.01) {
+              if (panel._vis!=='hidden') { panel._vis='hidden'; panel.style.visibility='hidden'; }
+            } else {
+              if (panel._vis!=='visible') { panel._vis='visible'; panel.style.visibility='visible'; }
+              var x=sinT*36;
+              var y=-offset*24;
+              var rotY=-theta*30;
+              var rotZ=sinT*-5;
+              var scale=.47+.53*focus;
+              var tStr='translate3d('+x.toFixed(2)+'vw,'+y.toFixed(2)+'vh,'+((cosT-1)*90).toFixed(1)+'px) rotateY('+rotY.toFixed(2)+'deg) rotateZ('+rotZ.toFixed(2)+'deg) scale('+scale.toFixed(3)+')';
+              if (panel._t!==tStr) { panel._t=tStr; panel.style.transform=tStr; }
+              var oStr=opacity.toFixed(3);
+              if (panel._o!==oStr) { panel._o=oStr; panel.style.opacity=oStr; }
+              /* No CSS filter on panels, ever. A blur()/saturate() filter on
+                 a full-viewport panel forces the browser to re-rasterize and
+                 blur a screen-sized surface for every in-flight panel on
+                 every frame — on machines with software rasterization (most
+                 corporate Chrome/Edge installs) that is what froze the
+                 panels solid once more than one was on screen. Depth is
+                 carried by scale, opacity and rotation only, which the
+                 compositor animates without repainting the cards. */
+              var zStr=String(Math.round(10+cosT*10-distance));
+              if (panel._z!==zStr) { panel._z=zStr; panel.style.zIndex=zStr; }
+            }
+            var active=index===nearest;
+            if (panel._active!==active) {
+              panel._active=active;
+              panel.classList.toggle('is-active',active);
+              panel.setAttribute('aria-hidden',active?'false':'true');
+              panel.inert=!active;
+            }
+          });
+          if (nearest!==fallbackLastNearest) {
+            fallbackLastNearest=nearest;
+            fallbackDots.forEach(function(dot,index){ dot.classList.toggle('is-active',index===nearest); if(index===nearest)dot.setAttribute('aria-current','step');else dot.removeAttribute('aria-current'); });
+            fallbackCount.textContent=String(nearest+1).padStart(2,'0')+' / '+String(fallbackPanels.length).padStart(2,'0');
+            fallbackTitle.textContent=fallbackPanels[nearest].getAttribute('data-title');
+          }
+          /* Background artwork is decorative: paint it at ~30fps, and in
+             low-power mode paint one static frame and then stop paying
+             for it entirely. */
+          if (fallbackLowPower) {
+            if (!fallbackStaticDrawn) { fallbackArtwork(now, 0); fallbackStaticDrawn = true; }
+          } else if (now - fallbackLastArt >= 32) {
+            fallbackArtwork(now, velocity);
+            fallbackLastArt = now;
+          }
+          if (fallbackLowPower && settled) { fallbackRunning = false; return; }
+          requestAnimationFrame(fallbackFrame);
+        }
+        function fallbackBindForm(form){
+          if(!form)return;
+          form.addEventListener('submit',function(event){
+            event.preventDefault(); if(!form.reportValidity())return;
+            var data=new FormData(form);
+            var subject='Higher Rank Strategy Call — '+(data.get('business')||data.get('name'));
+            var body=['Name: '+data.get('name'),'Email: '+data.get('email'),'Business / brand name: '+(data.get('business')||'Not provided'),'','What I am trying to accomplish:',data.get('goal'),'',"What's getting in the way:",data.get('blocker')].join('\n');
+            var note=form.querySelector('[data-form-note]'); if(note)note.textContent='Your email app is opening with the message ready to review and send.';
+            window.location.href='mailto:N.Young@HigherRankMedia.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+          });
+        }
+        fallbackBindForm(document.getElementById('orbit-strategy-form'));
+        document.addEventListener('click',function(event){
+          var link=event.target.closest('a[href^="#"]'); if(!link)return;
+          var map={'#main':0,'#services':1,'#process':2,'#live':5,'#about':6,'#contact':7};
+          var index=map[link.getAttribute('href')]; if(typeof index==='number'){event.preventDefault();fallbackGo(index);}
+        });
+        window.addEventListener('scroll',function(){ fallbackTargetFromScroll(); fallbackKick(); },{passive:true});
+        window.addEventListener('resize',fallbackResize,{passive:true});
+        document.addEventListener('visibilitychange',function(){ if (!document.hidden) fallbackKick(); });
+        if ('IntersectionObserver' in window) {
+          new IntersectionObserver(function(entries){
+            fallbackVisible = entries[0].isIntersecting;
+            if (fallbackVisible) fallbackKick();
+          },{threshold:.01}).observe(orbitExperience);
+        }
+        fallbackResize(); fallbackTargetFromScroll(); fallbackKick();
+        return;
+      }
+
+      var canvas = document.getElementById('orbit-canvas');
+      var renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
+      } catch (error) { return; }
+
+      document.documentElement.classList.add('orbit-ready');
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setClearColor(0x020705, 1);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+      var scene = new THREE.Scene();
+      var camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+      camera.position.z = 2;
+      var uniforms = {
+        uTime: { value: 0 },
+        uAspect: { value: 1 },
+        uVelocity: { value: 0 }
+      };
+      var material = new THREE.ShaderMaterial({
+        transparent: false,
+        depthWrite: false,
+        uniforms: uniforms,
+        vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position,1.0);}',
+        fragmentShader: [
+          'precision highp float;',
+          'varying vec2 vUv; uniform float uTime; uniform float uAspect; uniform float uVelocity;',
+          'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+          'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}',
+          'void main(){',
+          ' vec2 p=vUv-.5; p.x*=uAspect;',
+          ' vec2 c=vec2(.17*uAspect,.015); vec2 q=p-c;',
+          ' float r=length(q); float a=atan(q.y,q.x);',
+          ' float pulse=.5+.5*sin(uTime*.65);',
+          ' float shell=exp(-20.*r)*.42;',
+          ' shell+=smoothstep(.018,0.,abs(r-(.18+.018*sin(a*3.-uTime*.42))))*.72;',
+          ' shell+=smoothstep(.012,0.,abs(r-(.27+.025*sin(a*5.+uTime*.31))))*.38;',
+          ' shell+=smoothstep(.008,0.,abs(r-(.34+.014*sin(a*7.-uTime*.24))))*.2;',
+          ' float filaments=0.;',
+          ' for(float i=0.;i<5.;i++){',
+          '   float phase=i*1.256+uTime*(.08+i*.018)+uVelocity*.035;',
+          '   float curve=sin((p.x-c.x)*2.1+phase)*(.12+i*.015);',
+          '   float y=c.y+curve+(i-2.)*.09;',
+          '   float d=abs(p.y-y);',
+          '   filaments+=smoothstep(.012,0.,d)*.5+smoothstep(.075,0.,d)*.08;',
+          ' }',
+          ' filaments*=smoothstep(.72,.12,abs(p.x-c.x));',
+          ' float dust=step(.993,hash(floor(vUv*vec2(240.,140.))))*(.35+.65*noise(vUv*52.+uTime*.025));',
+          ' float vignette=smoothstep(.92,.14,length(vec2((vUv.x-.5)*.9,vUv.y-.5)));',
+          ' vec3 base=mix(vec3(.006,.027,.018),vec3(.008,.05,.032),vUv.y);',
+          ' vec3 glow=vec3(.08,.96,.55)*(shell+filaments*(.55+abs(uVelocity)*.004));',
+          ' glow+=vec3(.42,1.,.73)*dust*.33;',
+          ' gl_FragColor=vec4((base+glow)*vignette,1.);',
+          '}'
+        ].join('\n')
+      });
+      scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+
+      var ring = document.getElementById('orbit-ring');
+      var panels = Array.prototype.slice.call(document.querySelectorAll('.orbit-panel'));
+      var progress = document.querySelector('.orbit-progress');
+      var count = document.getElementById('orbit-count');
+      var title = document.getElementById('orbit-title');
+      var targetPosition = 0;
+      var displayPosition = 0;
+      var previousPosition = 0;
+      var visible = true;
+      var running = false;
+      var startTime = performance.now();
+
+      panels.forEach(function (panel, index) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'orbit-dot' + (index === 0 ? ' is-active' : '');
+        dot.setAttribute('aria-label', 'Go to ' + panel.getAttribute('data-title'));
+        dot.addEventListener('click', function () { goToPanel(index); });
+        progress.appendChild(dot);
+      });
+      var dots = Array.prototype.slice.call(progress.querySelectorAll('.orbit-dot'));
+
+      function resizeOrbit() {
+        var width = Math.max(1, window.innerWidth);
+        var height = Math.max(1, window.innerHeight);
+        renderer.setSize(width, height, false);
+        uniforms.uAspect.value = width / height;
+        updateTarget();
+      }
+
+      function easedSegment(value) {
+        var low = Math.floor(value);
+        var fraction = value - low;
+        if (low >= panels.length - 1) return panels.length - 1;
+        if (fraction <= .1) return low;
+        if (fraction >= .9) return low + 1;
+        var t = (fraction - .1) / .8;
+        t = t * t * (3 - 2 * t);
+        return low + t;
+      }
+
+      function updateTarget() {
+        var distance = Math.max(1, orbitExperience.offsetHeight - window.innerHeight);
+        var raw = Math.max(0, Math.min(1, (window.scrollY - orbitExperience.offsetTop) / distance));
+        targetPosition = easedSegment(raw * (panels.length - 1));
+        startLoop();
+      }
+
+      function goToPanel(index) {
+        var distance = orbitExperience.offsetHeight - window.innerHeight;
+        var y = orbitExperience.offsetTop + distance * (index / (panels.length - 1));
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+
+      function updatePanelState() {
+        var nearest = Math.max(0, Math.min(panels.length - 1, Math.round(displayPosition)));
+        panels.forEach(function (panel, index) {
+          var degrees = (index - displayPosition) * 45;
+          while (degrees > 180) degrees -= 360;
+          while (degrees < -180) degrees += 360;
+          var depth = Math.abs(degrees);
+          var opacity = depth < 24 ? 1 : depth < 62 ? .35 : depth < 105 ? .1 : .025;
+          panel.style.opacity = String(opacity);
+          panel.style.filter = 'blur(' + (depth < 24 ? 0 : Math.min(5, depth / 28)).toFixed(2) + 'px) saturate(' + (depth < 24 ? 1 : .5) + ')';
+          var active = index === nearest;
+          panel.classList.toggle('is-active', active);
+          panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+          panel.inert = !active;
+        });
+        dots.forEach(function (dot, index) {
+          var active = index === nearest;
+          dot.classList.toggle('is-active', active);
+          if (active) dot.setAttribute('aria-current', 'step');
+          else dot.removeAttribute('aria-current');
+        });
+        count.textContent = String(nearest + 1).padStart(2, '0') + ' / ' + String(panels.length).padStart(2, '0');
+        title.textContent = panels[nearest].getAttribute('data-title');
+      }
+
+      function render(now) {
+        running = false;
+        if (!visible || document.hidden || !document.documentElement.classList.contains('orbit-ready')) return;
+        var delta = targetPosition - displayPosition;
+        displayPosition += delta * .13;
+        var velocity = displayPosition - previousPosition;
+        previousPosition = displayPosition;
+        uniforms.uTime.value = (now - startTime) * .001;
+        uniforms.uVelocity.value += (velocity * 900 - uniforms.uVelocity.value) * .08;
+        ring.style.transform = 'rotateY(' + (-displayPosition * 45).toFixed(3) + 'deg)';
+        updatePanelState();
+        renderer.render(scene, camera);
+        if (Math.abs(delta) > .0002 || Math.abs(uniforms.uVelocity.value) > .015 || visible) startLoop();
+      }
+
+      function startLoop() {
+        if (!running && visible && !document.hidden) {
+          running = true;
+          requestAnimationFrame(render);
+        }
+      }
+
+      function bindMailForm(form) {
+        if (!form) return;
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          var data = new FormData(form);
+          var subject = 'Higher Rank Strategy Call — ' + (data.get('business') || data.get('name'));
+          var body = ['Name: ' + data.get('name'),'Email: ' + data.get('email'),'Business / brand name: ' + (data.get('business') || 'Not provided'),'','What I am trying to accomplish:',data.get('goal'),'',"What's getting in the way:",data.get('blocker')].join('\n');
+          var formNote = form.querySelector('[data-form-note]');
+          if (formNote) formNote.textContent = 'Your email app is opening with the message ready to review and send.';
+          window.location.href = 'mailto:N.Young@HigherRankMedia.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+        });
+      }
+      bindMailForm(document.getElementById('orbit-strategy-form'));
+
+      document.addEventListener('click', function (event) {
+        var link = event.target.closest('a[href^="#"]');
+        if (!link || !document.documentElement.classList.contains('orbit-ready')) return;
+        var map = { '#main':0, '#services':1, '#process':2, '#live':5, '#about':6, '#contact':7 };
+        var index = map[link.getAttribute('href')];
+        if (typeof index === 'number') { event.preventDefault(); goToPanel(index); }
+      });
+
+      window.addEventListener('scroll', updateTarget, { passive:true });
+      window.addEventListener('resize', resizeOrbit, { passive:true });
+      document.addEventListener('visibilitychange', startLoop);
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          visible = entries[0].isIntersecting;
+          if (visible) startLoop();
+        }, { threshold:.01 }).observe(orbitExperience);
+      }
+      canvas.addEventListener('webglcontextlost', function (event) {
+        event.preventDefault();
+        visible = false;
+        document.documentElement.classList.remove('orbit-ready');
+      }, false);
+
+      resizeOrbit();
+      updateTarget();
+      updatePanelState();
+      startLoop();
+    })();
+  </script>
+</body>
+</html>
