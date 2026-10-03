@@ -75,24 +75,46 @@
             return pr;
           }
 
-          /* One shared point sprite: white core fading to transparent. */
-          var spriteCanvas = document.createElement('canvas');
-          spriteCanvas.width = 64; spriteCanvas.height = 64;
-          var sctx = spriteCanvas.getContext('2d');
-          var spriteGrad = sctx.createRadialGradient(32,32,0,32,32,32);
-          spriteGrad.addColorStop(0,'rgba(255,255,255,1)');
-          spriteGrad.addColorStop(.25,'rgba(255,255,255,.85)');
-          spriteGrad.addColorStop(.6,'rgba(255,255,255,.26)');
-          spriteGrad.addColorStop(1,'rgba(255,255,255,0)');
-          sctx.fillStyle = spriteGrad;
-          sctx.fillRect(0,0,64,64);
-          var spriteTex = gl.createTexture();
-          gl.bindTexture(gl.TEXTURE_2D, spriteTex);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, spriteCanvas);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          /* Point sprites at 128x128: (a) a soft disc with a hot white
+             core; (b) the same disc plus thin cross diffraction spikes
+             for star glints and the crown. */
+          function makeSpriteTexture(sparkle) {
+            var c = document.createElement('canvas');
+            c.width = 128; c.height = 128;
+            var g2 = c.getContext('2d');
+            var grad = g2.createRadialGradient(64, 64, 0, 64, 64, 64);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(.18, 'rgba(255,255,255,.95)');
+            grad.addColorStop(.45, 'rgba(255,255,255,.32)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            g2.fillStyle = grad;
+            g2.fillRect(0, 0, 128, 128);
+            if (sparkle) {
+              g2.globalCompositeOperation = 'lighter';
+              var hg = g2.createLinearGradient(0, 0, 128, 0);
+              hg.addColorStop(0, 'rgba(255,255,255,0)');
+              hg.addColorStop(.5, 'rgba(255,255,255,.9)');
+              hg.addColorStop(1, 'rgba(255,255,255,0)');
+              g2.fillStyle = hg;
+              g2.fillRect(0, 63, 128, 2);
+              var vg = g2.createLinearGradient(0, 0, 0, 128);
+              vg.addColorStop(0, 'rgba(255,255,255,0)');
+              vg.addColorStop(.5, 'rgba(255,255,255,.9)');
+              vg.addColorStop(1, 'rgba(255,255,255,0)');
+              g2.fillStyle = vg;
+              g2.fillRect(63, 0, 2, 128);
+            }
+            var tex = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            return tex;
+          }
+          var softTex = makeSpriteTexture(false);
+          var sparkleTex = makeSpriteTexture(true);
 
           var fsSrc = [
             'precision mediump float;',
@@ -105,19 +127,23 @@
             '}'
           ].join('\n');
 
-          /* Strands: 3 intertwined helices. The vertex shader builds each
-             point's position from aS (0 at the top .. 1 at the bottom) so
-             uPhase can rotate the whole column in registration with the
-             panels and the 2D ribbon. */
+          /* Strands: 3 intertwined helices, every point drawn twice via
+             aLayer (0 = bright core shifted toward white, 1 = wide faint
+             halo). A traveling energy pulse runs down aS and multiplies
+             alpha. uPhase rotates the column in registration with the
+             panels and the 2D ribbon; uBreath is the whole-scene
+             breathing factor. */
           var strandVs = [
             'attribute float aS;',
             'attribute float aStrand;',
             'attribute float aRand;',
+            'attribute float aLayer;',
             'uniform mat4 uProj;',
             'uniform mat4 uView;',
             'uniform float uPhase;',
             'uniform float uTime;',
             'uniform float uPointScale;',
+            'uniform float uBreath;',
             'varying vec3 vColor;',
             'varying float vAlpha;',
             'void main(){',
@@ -129,24 +155,30 @@
             '  vec3 top = vec3(0.38, 0.93, 1.0);',
             '  vec3 mid = vec3(0.18, 0.49, 0.96);',
             '  vec3 bot = vec3(0.80, 0.92, 1.0);',
-            '  vColor = aS < 0.5 ? mix(top, mid, aS * 2.0) : mix(mid, bot, (aS - 0.5) * 2.0);',
+            '  vec3 base = aS < 0.5 ? mix(top, mid, aS * 2.0) : mix(mid, bot, (aS - 0.5) * 2.0);',
             '  float pulse = 0.85 + 0.15 * sin(uTime * 2.2 + aS * 18.0 + aStrand * 2.1);',
-            '  gl_PointSize = (0.05 + 0.055 * sin(aS * 3.14159265)) * (0.8 + aRand * 0.4) * pulse * uPointScale / max(1.0, -mv.z);',
-            '  vAlpha = 0.8;',
+            '  float size = (0.05 + 0.055 * sin(aS * 3.14159265)) * (0.8 + aRand * 0.4) * pulse;',
+            '  float energy = 1.0 + 0.9 * pow(0.5 + 0.5 * sin(aS * 24.0 - uTime * 2.6 + aStrand * 2.1), 3.0);',
+            '  float isHalo = step(0.5, aLayer);',
+            '  gl_PointSize = size * mix(1.0, 3.4, isHalo) * uPointScale / max(1.0, -mv.z);',
+            '  vColor = mix(base, vec3(1.0), mix(0.45, 0.05, isHalo));',
+            '  vAlpha = 0.85 * energy * uBreath * mix(1.0, 0.15, isHalo);',
             '}'
           ].join('\n');
 
           /* Static clouds (star crown + city base): precomputed positions,
-             per-point size/color, gentle per-point flicker from uTime. */
+             per-point size/color/alpha, gentle per-point flicker. */
           var cloudVs = [
             'attribute vec3 aPos;',
             'attribute float aSize;',
             'attribute vec3 aColor;',
             'attribute float aRand;',
+            'attribute float aAlpha;',
             'uniform mat4 uProj;',
             'uniform mat4 uView;',
             'uniform float uTime;',
             'uniform float uPointScale;',
+            'uniform float uBreath;',
             'varying vec3 vColor;',
             'varying float vAlpha;',
             'void main(){',
@@ -155,7 +187,33 @@
             '  float flick = 0.72 + 0.28 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7);',
             '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
             '  vColor = aColor;',
-            '  vAlpha = flick;',
+            '  vAlpha = flick * aAlpha * uBreath;',
+            '}'
+          ].join('\n');
+
+          /* Crown variant: the large central sprite (aSize >= 0.5) gets a
+             slow breathing pulse on top of the cloud behavior. */
+          var crownVs = [
+            'attribute vec3 aPos;',
+            'attribute float aSize;',
+            'attribute vec3 aColor;',
+            'attribute float aRand;',
+            'attribute float aAlpha;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uTime;',
+            'uniform float uPointScale;',
+            'uniform float uBreath;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  vec4 mv = uView * vec4(aPos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  float flick = 0.72 + 0.28 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7);',
+            '  float breathe = 1.0 + 0.12 * step(0.5, aSize) * (0.5 + 0.5 * sin(uTime * 0.9));',
+            '  gl_PointSize = aSize * breathe * uPointScale / max(1.0, -mv.z);',
+            '  vColor = aColor;',
+            '  vAlpha = flick * aAlpha * uBreath;',
             '}'
           ].join('\n');
 
@@ -169,6 +227,7 @@
             'uniform float uPhase;',
             'uniform float uTime;',
             'uniform float uPointScale;',
+            'uniform float uBreath;',
             'varying vec3 vColor;',
             'varying float vAlpha;',
             'void main(){',
@@ -180,20 +239,50 @@
             '  gl_Position = uProj * mv;',
             '  gl_PointSize = (0.025 + aRand * 0.04) * uPointScale / max(1.0, -mv.z);',
             '  vColor = mix(vec3(0.40, 0.80, 1.0), vec3(0.85, 0.95, 1.0), aRand);',
-            '  vAlpha = 0.55 * sin(s * 3.14159265);',
+            '  vAlpha = 0.55 * sin(s * 3.14159265) * uBreath;',
             '}'
           ].join('\n');
 
-          function makeSystem(vsSrc, data) {
+          /* Sparkle glints: points on the helix (aRand picks the strand
+             and phase) whose alpha is a sharp pow-24 flash — brief star
+             glints that pop and vanish along the column. */
+          var glintVs = [
+            'attribute float aS;',
+            'attribute float aStrand;',
+            'attribute float aRand;',
+            'attribute float aSize;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uPhase;',
+            'uniform float uTime;',
+            'uniform float uPointScale;',
+            'uniform float uBreath;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  float ang = aS * 3.14159265 * 7.0 + aStrand * 2.094 + uPhase;',
+            '  float radius = 0.55 * (0.75 + 0.25 * sin(aS * 3.14159265));',
+            '  vec3 pos = vec3(cos(ang) * radius, (0.5 - aS) * 4.4, sin(ang) * radius);',
+            '  vec4 mv = uView * vec4(pos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  float flash = pow(max(0.0, sin(uTime * (0.5 + aRand * 0.9) + aRand * 61.0)), 24.0);',
+            '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
+            '  vColor = vec3(0.88, 0.96, 1.0);',
+            '  vAlpha = flash * uBreath;',
+            '}'
+          ].join('\n');
+
+          function makeSystem(vsSrc, data, tex) {
             var prog = buildProgram(vsSrc, fsSrc);
             if (!prog) return null;
             var sys = {
-              prog: prog, count: 0, attribs: [],
+              prog: prog, tex: tex, count: 0, attribs: [],
               uProj: gl.getUniformLocation(prog, 'uProj'),
               uView: gl.getUniformLocation(prog, 'uView'),
               uPhase: gl.getUniformLocation(prog, 'uPhase'),
               uTime: gl.getUniformLocation(prog, 'uTime'),
               uPointScale: gl.getUniformLocation(prog, 'uPointScale'),
+              uBreath: gl.getUniformLocation(prog, 'uBreath'),
               uTex: gl.getUniformLocation(prog, 'uTex')
             };
             for (var name in data) {
@@ -208,24 +297,38 @@
             return sys.count > 0 ? sys : null;
           }
 
-          /* Strand geometry: 3 strands x 220 points. */
-          var strandS = [], strandIdx = [], strandRand = [];
+          /* Strand geometry: 3 strands x 300 points, core layer first,
+             then the same 900 points again as the halo layer (so the
+             quality governor can skip the halo with one draw count). */
+          var baseS = [], baseIdx = [], baseRand = [];
           for (var st = 0; st < 3; st++) {
-            for (var si = 0; si < 220; si++) {
-              strandS.push(si / 219);
-              strandIdx.push(st);
-              strandRand.push(Math.random());
+            for (var si = 0; si < 300; si++) {
+              baseS.push(si / 299);
+              baseIdx.push(st);
+              baseRand.push(Math.random());
+            }
+          }
+          var strandS = [], strandIdx = [], strandRand = [], strandLayer = [];
+          for (var layer = 0; layer < 2; layer++) {
+            for (var pi = 0; pi < baseS.length; pi++) {
+              strandS.push(baseS[pi]);
+              strandIdx.push(baseIdx[pi]);
+              strandRand.push(baseRand[pi]);
+              strandLayer.push(layer);
             }
           }
           var strands = makeSystem(strandVs, {
             aS: { values: new Float32Array(strandS), size: 1 },
             aStrand: { values: new Float32Array(strandIdx), size: 1 },
-            aRand: { values: new Float32Array(strandRand), size: 1 }
-          });
+            aRand: { values: new Float32Array(strandRand), size: 1 },
+            aLayer: { values: new Float32Array(strandLayer), size: 1 }
+          }, softTex);
           if (!strands) return null;
+          strands.haloStart = baseS.length;
 
-          /* Star crown: one large soft sprite at the top plus sparkles. */
-          var crownPos = [0, 2.35, 0], crownSize = [0.9], crownColor = [0.88, 0.97, 1.0], crownRand = [0.5];
+          /* Star crown: one large sparkle sprite at the top plus sparkles,
+             all on the sparkle texture. */
+          var crownPos = [0, 2.35, 0], crownSize = [0.9], crownColor = [0.88, 0.97, 1.0], crownRand = [0.5], crownAlpha = [1.0];
           for (var ci = 0; ci < 40; ci++) {
             var cAng = Math.random() * Math.PI * 2;
             var cRad = Math.pow(Math.random(), 0.6) * 0.3;
@@ -236,18 +339,21 @@
             else if (cPick < 0.75) crownColor.push(0.85, 0.95, 1.0);
             else crownColor.push(0.35, 0.6, 1.0);
             crownRand.push(Math.random());
+            crownAlpha.push(0.9);
           }
-          var crown = makeSystem(cloudVs, {
+          var crown = makeSystem(crownVs, {
             aPos: { values: new Float32Array(crownPos), size: 3 },
             aSize: { values: new Float32Array(crownSize), size: 1 },
             aColor: { values: new Float32Array(crownColor), size: 3 },
-            aRand: { values: new Float32Array(crownRand), size: 1 }
-          });
+            aRand: { values: new Float32Array(crownRand), size: 1 },
+            aAlpha: { values: new Float32Array(crownAlpha), size: 1 }
+          }, sparkleTex);
           if (!crown) return null;
 
-          /* City base: ~500 lights in a flat disc — the city from above. */
-          var cityPos = [], citySize = [], cityColor = [], cityRand = [];
-          for (var bi = 0; bi < 500; bi++) {
+          /* City base: 800 lights in a flat disc, plus one large, very
+             faint soft sprite at the center as ground glow. */
+          var cityPos = [], citySize = [], cityColor = [], cityRand = [], cityAlpha = [];
+          for (var bi = 0; bi < 800; bi++) {
             var bAng = Math.random() * Math.PI * 2;
             var bRad = 1.9 * Math.sqrt(Math.random());
             cityPos.push(Math.cos(bAng) * bRad, -2.3 + (Math.random() - 0.5) * 0.05, Math.sin(bAng) * bRad);
@@ -257,31 +363,160 @@
             else if (bPick < 0.8) cityColor.push(0.38, 0.85, 1.0);
             else cityColor.push(0.82, 0.92, 1.0);
             cityRand.push(Math.random());
+            cityAlpha.push(0.85);
           }
+          cityPos.push(0, -2.32, 0);
+          citySize.push(2.6);
+          cityColor.push(0.18, 0.49, 0.96);
+          cityRand.push(0.5);
+          cityAlpha.push(0.10);
           var cityBase = makeSystem(cloudVs, {
             aPos: { values: new Float32Array(cityPos), size: 3 },
             aSize: { values: new Float32Array(citySize), size: 1 },
             aColor: { values: new Float32Array(cityColor), size: 3 },
-            aRand: { values: new Float32Array(cityRand), size: 1 }
-          });
+            aRand: { values: new Float32Array(cityRand), size: 1 },
+            aAlpha: { values: new Float32Array(cityAlpha), size: 1 }
+          }, softTex);
           if (!cityBase) return null;
 
-          /* Rising motes: 150 points drifting up the column volume. */
+          /* Rising motes: 220 points drifting up the column volume. */
           var moteS = [], moteRand = [];
-          for (var mi = 0; mi < 150; mi++) { moteS.push(Math.random()); moteRand.push(Math.random()); }
+          for (var mi = 0; mi < 220; mi++) { moteS.push(Math.random()); moteRand.push(Math.random()); }
           var motes = makeSystem(moteVs, {
             aS: { values: new Float32Array(moteS), size: 1 },
             aRand: { values: new Float32Array(moteRand), size: 1 }
-          });
+          }, softTex);
           if (!motes) return null;
 
-          var systems = [strands, crown, cityBase, motes];
+          /* Sparkle glints: ~90 flash points riding the helix. */
+          var glintS = [], glintIdx = [], glintRand = [], glintSize = [];
+          for (var gi = 0; gi < 90; gi++) {
+            var gRand = Math.random();
+            glintS.push(Math.random());
+            glintIdx.push(Math.floor(gRand * 2.999));
+            glintRand.push(gRand);
+            glintSize.push(0.10 + Math.random() * 0.12);
+          }
+          var glints = makeSystem(glintVs, {
+            aS: { values: new Float32Array(glintS), size: 1 },
+            aStrand: { values: new Float32Array(glintIdx), size: 1 },
+            aRand: { values: new Float32Array(glintRand), size: 1 },
+            aSize: { values: new Float32Array(glintSize), size: 1 }
+          }, sparkleTex);
+          if (!glints) return null;
+
+          var systems = [strands, crown, cityBase, motes, glints];
+
+          /* ---- Bloom pipeline (WebGL1, UNSIGNED_BYTE targets) ----
+             Scene renders into an FBO; a separable 9-tap gaussian runs
+             over two quarter-resolution targets (two iterations); a
+             composite pass adds scene + bloom * 1.15 to the screen. If
+             any target fails FRAMEBUFFER_COMPLETE, bloomOK stays false
+             and rendering falls back to the direct-to-screen path. */
+          var postVs = [
+            'attribute vec2 aPos;',
+            'varying vec2 vUv;',
+            'void main(){',
+            '  vUv = aPos * 0.5 + 0.5;',
+            '  gl_Position = vec4(aPos, 0.0, 1.0);',
+            '}'
+          ].join('\n');
+          var blurFs = [
+            'precision mediump float;',
+            'uniform sampler2D uTex;',
+            'uniform vec2 uDir;',
+            'varying vec2 vUv;',
+            'void main(){',
+            '  vec4 c = texture2D(uTex, vUv) * 0.227027;',
+            '  c += texture2D(uTex, vUv + uDir * 1.0) * 0.1945946;',
+            '  c += texture2D(uTex, vUv - uDir * 1.0) * 0.1945946;',
+            '  c += texture2D(uTex, vUv + uDir * 2.0) * 0.1216216;',
+            '  c += texture2D(uTex, vUv - uDir * 2.0) * 0.1216216;',
+            '  c += texture2D(uTex, vUv + uDir * 3.0) * 0.054054;',
+            '  c += texture2D(uTex, vUv - uDir * 3.0) * 0.054054;',
+            '  c += texture2D(uTex, vUv + uDir * 4.0) * 0.016216;',
+            '  c += texture2D(uTex, vUv - uDir * 4.0) * 0.016216;',
+            '  gl_FragColor = c;',
+            '}'
+          ].join('\n');
+          var compFs = [
+            'precision mediump float;',
+            'uniform sampler2D uScene;',
+            'uniform sampler2D uBloom;',
+            'varying vec2 vUv;',
+            'void main(){',
+            '  vec4 s = texture2D(uScene, vUv);',
+            '  vec3 b = texture2D(uBloom, vUv).rgb;',
+            '  gl_FragColor = vec4(s.rgb + b * 1.15, s.a);',
+            '}'
+          ].join('\n');
+          var blurProg = buildProgram(postVs, blurFs);
+          var compProg = buildProgram(postVs, compFs);
+          var blurAPos = blurProg ? gl.getAttribLocation(blurProg, 'aPos') : -1;
+          var blurUTex = blurProg ? gl.getUniformLocation(blurProg, 'uTex') : null;
+          var blurUDir = blurProg ? gl.getUniformLocation(blurProg, 'uDir') : null;
+          var compAPos = compProg ? gl.getAttribLocation(compProg, 'aPos') : -1;
+          var compUScene = compProg ? gl.getUniformLocation(compProg, 'uScene') : null;
+          var compUBloom = compProg ? gl.getUniformLocation(compProg, 'uBloom') : null;
+          var quadBuf = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+
+          function createTarget(w, h) {
+            var tex = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            var fb = gl.createFramebuffer();
+            gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+            var ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            if (!ok) { gl.deleteFramebuffer(fb); gl.deleteTexture(tex); return null; }
+            return { fb: fb, tex: tex, w: w, h: h };
+          }
+          function deleteTarget(t) {
+            if (!t) return;
+            gl.deleteFramebuffer(t.fb);
+            gl.deleteTexture(t.tex);
+          }
+          var sceneT = null, blurA = null, blurB = null, bloomOK = false;
+          function buildTargets(w, h) {
+            deleteTarget(sceneT); deleteTarget(blurA); deleteTarget(blurB);
+            sceneT = null; blurA = null; blurB = null; bloomOK = false;
+            if (!blurProg || !compProg) return;
+            var qw = Math.max(1, w >> 2), qh = Math.max(1, h >> 2);
+            sceneT = createTarget(w, h);
+            blurA = createTarget(qw, qh);
+            blurB = createTarget(qw, qh);
+            if (sceneT && blurA && blurB) { bloomOK = true; return; }
+            deleteTarget(sceneT); deleteTarget(blurA); deleteTarget(blurB);
+            sceneT = null; blurA = null; blurB = null;
+          }
+          function drawQuad(posLoc) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            gl.disableVertexAttribArray(posLoc);
+          }
+          function blurPass(srcTex, dst, dirX, dirY, srcW, srcH) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb);
+            gl.viewport(0, 0, dst.w, dst.h);
+            gl.useProgram(blurProg);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, srcTex);
+            gl.uniform1i(blurUTex, 0);
+            gl.uniform2f(blurUDir, dirX / srcW, dirY / srcH);
+            drawQuad(blurAPos);
+          }
 
           gl.disable(gl.DEPTH_TEST);
           gl.enable(gl.BLEND);
           gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-          gl.activeTexture(gl.TEXTURE0);
-          gl.bindTexture(gl.TEXTURE_2D, spriteTex);
 
           var lost = false;
           glCanvas.addEventListener('webglcontextlost', function (event) {
@@ -317,29 +552,80 @@
             ]);
           }
 
+          /* Quality governor: EMA of frame delta drives four tiers —
+             0: DPR up to 2 + bloom; 1: DPR 1.5 + bloom; 2: DPR 1.25 +
+             bloom; 3: DPR 1, no bloom, halo layer skipped. Steps down
+             after ~90 sustained slow frames, back up only after ~600
+             fast frames, at most one change per 1.5s. */
+          var DPR_TIERS = [2, 1.5, 1.25, 1];
+          var tier = 0;
+          var govEma = 16.7, govSlow = 0, govFast = 0, govLastNow = 0, govLastChange = 0;
+          var curW = 0, curH = 0;
+
           function resize() {
-            glCanvas.width = window.innerWidth;
-            glCanvas.height = window.innerHeight;
-            gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+            var dpr = Math.min(window.devicePixelRatio || 1, DPR_TIERS[tier]);
+            var w = Math.max(1, Math.floor(window.innerWidth * dpr));
+            var h = Math.max(1, Math.floor(window.innerHeight * dpr));
+            if (w === curW && h === curH) { gl.viewport(0, 0, w, h); return; }
+            curW = w; curH = h;
+            glCanvas.width = w;
+            glCanvas.height = h;
+            gl.viewport(0, 0, w, h);
+            buildTargets(w, h);
+          }
+          function applyTier(next, now) {
+            tier = next;
+            govLastChange = now;
+            govSlow = 0; govFast = 0;
+            resize();
+          }
+          function governor(now) {
+            if (govLastNow) {
+              var dt = now - govLastNow;
+              if (dt > 0 && dt <= 100) {
+                govEma = govEma * 0.95 + dt * 0.05;
+                if (govEma > 24) { govSlow++; govFast = 0; }
+                else if (govEma < 12) { govFast++; govSlow = 0; }
+                else { govSlow = 0; govFast = 0; }
+                if (now - govLastChange >= 1500) {
+                  if (govSlow >= 90 && tier < 3) applyTier(tier + 1, now);
+                  else if (govFast >= 600 && tier > 0) applyTier(tier - 1, now);
+                }
+              }
+            }
+            govLastNow = now;
           }
           resize();
 
-          function drawSystem(sys, proj, view, phase, time, pointScale) {
+          function drawSystem(sys, proj, view, phase, time, pointScale, breath, count) {
             gl.useProgram(sys.prog);
             gl.uniformMatrix4fv(sys.uProj, false, proj);
             gl.uniformMatrix4fv(sys.uView, false, view);
             if (sys.uPhase) gl.uniform1f(sys.uPhase, phase);
             if (sys.uTime) gl.uniform1f(sys.uTime, time);
             if (sys.uPointScale) gl.uniform1f(sys.uPointScale, pointScale);
+            if (sys.uBreath) gl.uniform1f(sys.uBreath, breath);
             if (sys.uTex) gl.uniform1i(sys.uTex, 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, sys.tex);
             for (var i = 0; i < sys.attribs.length; i++) {
               var at = sys.attribs[i];
               gl.bindBuffer(gl.ARRAY_BUFFER, at.buf);
               gl.enableVertexAttribArray(at.loc);
               gl.vertexAttribPointer(at.loc, at.size, gl.FLOAT, false, 0, 0);
             }
-            gl.drawArrays(gl.POINTS, 0, sys.count);
+            gl.drawArrays(gl.POINTS, 0, count);
             for (var j = 0; j < sys.attribs.length; j++) gl.disableVertexAttribArray(sys.attribs[j].loc);
+          }
+          function drawAll(proj, view, phase, time, pointScale, breath) {
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+            for (var i = 0; i < systems.length; i++) {
+              var sys = systems[i];
+              var n = sys.count;
+              if (tier >= 3 && sys.haloStart) n = sys.haloStart;
+              drawSystem(sys, proj, view, phase, time, pointScale, breath, n);
+            }
           }
 
           /* Camera orbits and descends in sync with the scroll position:
@@ -348,6 +634,7 @@
              same 1.83 rate as the panels and the 2D helical ribbon. */
           function render(display, now) {
             if (lost) return;
+            governor(now);
             var total = fallbackPanels.length - 1;
             var cp = total > 0 ? Math.max(0, Math.min(1, display / total)) : 0;
             var ang = cp * 0.9;
@@ -360,9 +647,36 @@
             var phase = display * 1.83;
             var time = now * 0.001;
             var pointScale = glCanvas.height / (2 * Math.tan(21 * Math.PI / 180));
-            gl.clearColor(0, 0, 0, 0);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            for (var i = 0; i < systems.length; i++) drawSystem(systems[i], proj, view, phase, time, pointScale);
+            var breath = 0.94 + 0.06 * Math.sin(time * 0.8);
+            if (bloomOK && tier < 3) {
+              gl.bindFramebuffer(gl.FRAMEBUFFER, sceneT.fb);
+              gl.viewport(0, 0, sceneT.w, sceneT.h);
+              gl.clearColor(0, 0, 0, 0);
+              gl.clear(gl.COLOR_BUFFER_BIT);
+              drawAll(proj, view, phase, time, pointScale, breath);
+              gl.disable(gl.BLEND);
+              blurPass(sceneT.tex, blurA, 1, 0, sceneT.w, sceneT.h);
+              blurPass(blurA.tex, blurB, 0, 1, blurA.w, blurA.h);
+              blurPass(blurB.tex, blurA, 1, 0, blurB.w, blurB.h);
+              blurPass(blurA.tex, blurB, 0, 1, blurA.w, blurA.h);
+              gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+              gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+              gl.useProgram(compProg);
+              gl.activeTexture(gl.TEXTURE0);
+              gl.bindTexture(gl.TEXTURE_2D, sceneT.tex);
+              gl.uniform1i(compUScene, 0);
+              gl.activeTexture(gl.TEXTURE1);
+              gl.bindTexture(gl.TEXTURE_2D, blurB.tex);
+              gl.uniform1i(compUBloom, 1);
+              drawQuad(compAPos);
+              gl.activeTexture(gl.TEXTURE0);
+            } else {
+              gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+              gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+              gl.clearColor(0, 0, 0, 0);
+              gl.clear(gl.COLOR_BUFFER_BIT);
+              drawAll(proj, view, phase, time, pointScale, breath);
+            }
           }
 
           return {
