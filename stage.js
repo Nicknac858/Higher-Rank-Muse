@@ -25,6 +25,8 @@
         var ctx = canvas.getContext('2d');
         var canvasRatio = Math.min(window.devicePixelRatio || 1, 1);
         var fallbackBg = document.createElement('canvas');
+        var spine = null;
+        var spineLastDisplay = -1;
 
         fallbackPanels.forEach(function (panel, index) {
           var dot = document.createElement('button');
@@ -35,6 +37,340 @@
           fallbackProgress.appendChild(dot);
           fallbackDots.push(dot);
         });
+
+        /* Real-time 3D spine: a glowing helical column of light rendered in
+           raw WebGL1 (no libraries, no external assets) that the panels
+           revolve around. The city photo remains the fallback: if the GL
+           context or any shader fails, initSpine returns null and the
+           photo journey runs exactly as before. On success the html element
+           gets the 'spine-on' class, which swaps the photo for this canvas.
+           Four tiny point systems (helical strands, star crown, city base,
+           rising motes) share one generated sprite texture; additive
+           blending, no depth test, DPR capped at 1 — under ~1400 points
+           and 4 draw calls, so it stays feather-light. */
+        function initSpine() {
+          var glCanvas = document.getElementById('orbit-spine');
+          if (!glCanvas) return null;
+          var gl = null;
+          var ctxOpts = { alpha:true, antialias:false, depth:false, stencil:false, preserveDrawingBuffer:true, powerPreference:'low-power' };
+          try { gl = glCanvas.getContext('webgl', ctxOpts) || glCanvas.getContext('experimental-webgl', ctxOpts); } catch (error) { gl = null; }
+          if (!gl) return null;
+
+          function compileShader(type, src) {
+            var sh = gl.createShader(type);
+            gl.shaderSource(sh, src);
+            gl.compileShader(sh);
+            if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) { gl.deleteShader(sh); return null; }
+            return sh;
+          }
+          function buildProgram(vsSrc, fsSrc) {
+            var vs = compileShader(gl.VERTEX_SHADER, vsSrc);
+            var fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+            if (!vs || !fs) return null;
+            var pr = gl.createProgram();
+            gl.attachShader(pr, vs);
+            gl.attachShader(pr, fs);
+            gl.linkProgram(pr);
+            if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) { gl.deleteProgram(pr); return null; }
+            return pr;
+          }
+
+          /* One shared point sprite: white core fading to transparent. */
+          var spriteCanvas = document.createElement('canvas');
+          spriteCanvas.width = 64; spriteCanvas.height = 64;
+          var sctx = spriteCanvas.getContext('2d');
+          var spriteGrad = sctx.createRadialGradient(32,32,0,32,32,32);
+          spriteGrad.addColorStop(0,'rgba(255,255,255,1)');
+          spriteGrad.addColorStop(.25,'rgba(255,255,255,.85)');
+          spriteGrad.addColorStop(.6,'rgba(255,255,255,.26)');
+          spriteGrad.addColorStop(1,'rgba(255,255,255,0)');
+          sctx.fillStyle = spriteGrad;
+          sctx.fillRect(0,0,64,64);
+          var spriteTex = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, spriteTex);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, spriteCanvas);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+          var fsSrc = [
+            'precision mediump float;',
+            'uniform sampler2D uTex;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  vec4 tex = texture2D(uTex, gl_PointCoord);',
+            '  gl_FragColor = vec4(vColor, vAlpha) * tex;',
+            '}'
+          ].join('\n');
+
+          /* Strands: 3 intertwined helices. The vertex shader builds each
+             point's position from aS (0 at the top .. 1 at the bottom) so
+             uPhase can rotate the whole column in registration with the
+             panels and the 2D ribbon. */
+          var strandVs = [
+            'attribute float aS;',
+            'attribute float aStrand;',
+            'attribute float aRand;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uPhase;',
+            'uniform float uTime;',
+            'uniform float uPointScale;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  float ang = aS * 3.14159265 * 7.0 + aStrand * 2.094 + uPhase;',
+            '  float radius = 0.55 * (0.75 + 0.25 * sin(aS * 3.14159265));',
+            '  vec3 pos = vec3(cos(ang) * radius, (0.5 - aS) * 4.4, sin(ang) * radius);',
+            '  vec4 mv = uView * vec4(pos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  vec3 top = vec3(0.38, 0.93, 1.0);',
+            '  vec3 mid = vec3(0.18, 0.49, 0.96);',
+            '  vec3 bot = vec3(0.80, 0.92, 1.0);',
+            '  vColor = aS < 0.5 ? mix(top, mid, aS * 2.0) : mix(mid, bot, (aS - 0.5) * 2.0);',
+            '  float pulse = 0.85 + 0.15 * sin(uTime * 2.2 + aS * 18.0 + aStrand * 2.1);',
+            '  gl_PointSize = (0.05 + 0.055 * sin(aS * 3.14159265)) * (0.8 + aRand * 0.4) * pulse * uPointScale / max(1.0, -mv.z);',
+            '  vAlpha = 0.8;',
+            '}'
+          ].join('\n');
+
+          /* Static clouds (star crown + city base): precomputed positions,
+             per-point size/color, gentle per-point flicker from uTime. */
+          var cloudVs = [
+            'attribute vec3 aPos;',
+            'attribute float aSize;',
+            'attribute vec3 aColor;',
+            'attribute float aRand;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uTime;',
+            'uniform float uPointScale;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  vec4 mv = uView * vec4(aPos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  float flick = 0.72 + 0.28 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7);',
+            '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
+            '  vColor = aColor;',
+            '  vAlpha = flick;',
+            '}'
+          ].join('\n');
+
+          /* Rising motes: aS wraps upward over time inside the shader, so
+             particles continually climb the column and fade at the ends. */
+          var moteVs = [
+            'attribute float aS;',
+            'attribute float aRand;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uPhase;',
+            'uniform float uTime;',
+            'uniform float uPointScale;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  float s = fract(aS + uTime * (0.02 + aRand * 0.03));',
+            '  float ang = s * 3.14159265 * 7.0 + aRand * 6.28318 + uPhase;',
+            '  float radius = (0.12 + aRand * 0.5) * (0.75 + 0.25 * sin(s * 3.14159265));',
+            '  vec3 pos = vec3(cos(ang) * radius, (0.5 - s) * 4.4, sin(ang) * radius);',
+            '  vec4 mv = uView * vec4(pos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  gl_PointSize = (0.025 + aRand * 0.04) * uPointScale / max(1.0, -mv.z);',
+            '  vColor = mix(vec3(0.40, 0.80, 1.0), vec3(0.85, 0.95, 1.0), aRand);',
+            '  vAlpha = 0.55 * sin(s * 3.14159265);',
+            '}'
+          ].join('\n');
+
+          function makeSystem(vsSrc, data) {
+            var prog = buildProgram(vsSrc, fsSrc);
+            if (!prog) return null;
+            var sys = {
+              prog: prog, count: 0, attribs: [],
+              uProj: gl.getUniformLocation(prog, 'uProj'),
+              uView: gl.getUniformLocation(prog, 'uView'),
+              uPhase: gl.getUniformLocation(prog, 'uPhase'),
+              uTime: gl.getUniformLocation(prog, 'uTime'),
+              uPointScale: gl.getUniformLocation(prog, 'uPointScale'),
+              uTex: gl.getUniformLocation(prog, 'uTex')
+            };
+            for (var name in data) {
+              var loc = gl.getAttribLocation(prog, name);
+              if (loc < 0) continue;
+              var buf = gl.createBuffer();
+              gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+              gl.bufferData(gl.ARRAY_BUFFER, data[name].values, gl.STATIC_DRAW);
+              sys.attribs.push({ loc: loc, buf: buf, size: data[name].size });
+              sys.count = data[name].values.length / data[name].size;
+            }
+            return sys.count > 0 ? sys : null;
+          }
+
+          /* Strand geometry: 3 strands x 220 points. */
+          var strandS = [], strandIdx = [], strandRand = [];
+          for (var st = 0; st < 3; st++) {
+            for (var si = 0; si < 220; si++) {
+              strandS.push(si / 219);
+              strandIdx.push(st);
+              strandRand.push(Math.random());
+            }
+          }
+          var strands = makeSystem(strandVs, {
+            aS: { values: new Float32Array(strandS), size: 1 },
+            aStrand: { values: new Float32Array(strandIdx), size: 1 },
+            aRand: { values: new Float32Array(strandRand), size: 1 }
+          });
+          if (!strands) return null;
+
+          /* Star crown: one large soft sprite at the top plus sparkles. */
+          var crownPos = [0, 2.35, 0], crownSize = [0.9], crownColor = [0.88, 0.97, 1.0], crownRand = [0.5];
+          for (var ci = 0; ci < 40; ci++) {
+            var cAng = Math.random() * Math.PI * 2;
+            var cRad = Math.pow(Math.random(), 0.6) * 0.3;
+            crownPos.push(Math.cos(cAng) * cRad, 2.35 + (Math.random() - 0.5) * 0.22, Math.sin(cAng) * cRad);
+            crownSize.push(0.03 + Math.random() * 0.06);
+            var cPick = Math.random();
+            if (cPick < 0.4) crownColor.push(0.45, 0.9, 1.0);
+            else if (cPick < 0.75) crownColor.push(0.85, 0.95, 1.0);
+            else crownColor.push(0.35, 0.6, 1.0);
+            crownRand.push(Math.random());
+          }
+          var crown = makeSystem(cloudVs, {
+            aPos: { values: new Float32Array(crownPos), size: 3 },
+            aSize: { values: new Float32Array(crownSize), size: 1 },
+            aColor: { values: new Float32Array(crownColor), size: 3 },
+            aRand: { values: new Float32Array(crownRand), size: 1 }
+          });
+          if (!crown) return null;
+
+          /* City base: ~500 lights in a flat disc — the city from above. */
+          var cityPos = [], citySize = [], cityColor = [], cityRand = [];
+          for (var bi = 0; bi < 500; bi++) {
+            var bAng = Math.random() * Math.PI * 2;
+            var bRad = 1.9 * Math.sqrt(Math.random());
+            cityPos.push(Math.cos(bAng) * bRad, -2.3 + (Math.random() - 0.5) * 0.05, Math.sin(bAng) * bRad);
+            citySize.push(0.025 + Math.random() * 0.045);
+            var bPick = Math.random();
+            if (bPick < 0.45) cityColor.push(0.18, 0.49, 0.96);
+            else if (bPick < 0.8) cityColor.push(0.38, 0.85, 1.0);
+            else cityColor.push(0.82, 0.92, 1.0);
+            cityRand.push(Math.random());
+          }
+          var cityBase = makeSystem(cloudVs, {
+            aPos: { values: new Float32Array(cityPos), size: 3 },
+            aSize: { values: new Float32Array(citySize), size: 1 },
+            aColor: { values: new Float32Array(cityColor), size: 3 },
+            aRand: { values: new Float32Array(cityRand), size: 1 }
+          });
+          if (!cityBase) return null;
+
+          /* Rising motes: 150 points drifting up the column volume. */
+          var moteS = [], moteRand = [];
+          for (var mi = 0; mi < 150; mi++) { moteS.push(Math.random()); moteRand.push(Math.random()); }
+          var motes = makeSystem(moteVs, {
+            aS: { values: new Float32Array(moteS), size: 1 },
+            aRand: { values: new Float32Array(moteRand), size: 1 }
+          });
+          if (!motes) return null;
+
+          var systems = [strands, crown, cityBase, motes];
+
+          gl.disable(gl.DEPTH_TEST);
+          gl.enable(gl.BLEND);
+          gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, spriteTex);
+
+          var lost = false;
+          glCanvas.addEventListener('webglcontextlost', function (event) {
+            event.preventDefault();
+            lost = true;
+            document.documentElement.classList.remove('spine-on');
+          });
+
+          function perspective(fovY, aspect, near, far) {
+            var f = 1 / Math.tan(fovY / 2);
+            var nf = 1 / (near - far);
+            return new Float32Array([
+              f / aspect, 0, 0, 0,
+              0, f, 0, 0,
+              0, 0, (far + near) * nf, -1,
+              0, 0, 2 * far * near * nf, 0
+            ]);
+          }
+          function lookAt(eye, center) {
+            var zx = eye[0] - center[0], zy = eye[1] - center[1], zz = eye[2] - center[2];
+            var zl = Math.sqrt(zx * zx + zy * zy + zz * zz) || 1; zx /= zl; zy /= zl; zz /= zl;
+            var xx = zz, xy = 0, xz = -zx; /* cross(up=(0,1,0), z) */
+            var xl = Math.sqrt(xx * xx + xy * xy + xz * xz) || 1; xx /= xl; xy /= xl; xz /= xl;
+            var yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx;
+            return new Float32Array([
+              xx, xy, xz, 0,
+              yx, yy, yz, 0,
+              zx, zy, zz, 0,
+              -(xx * eye[0] + xy * eye[1] + xz * eye[2]),
+              -(yx * eye[0] + yy * eye[1] + yz * eye[2]),
+              -(zx * eye[0] + zy * eye[1] + zz * eye[2]),
+              1
+            ]);
+          }
+
+          function resize() {
+            glCanvas.width = window.innerWidth;
+            glCanvas.height = window.innerHeight;
+            gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+          }
+          resize();
+
+          function drawSystem(sys, proj, view, phase, time, pointScale) {
+            gl.useProgram(sys.prog);
+            gl.uniformMatrix4fv(sys.uProj, false, proj);
+            gl.uniformMatrix4fv(sys.uView, false, view);
+            if (sys.uPhase) gl.uniform1f(sys.uPhase, phase);
+            if (sys.uTime) gl.uniform1f(sys.uTime, time);
+            if (sys.uPointScale) gl.uniform1f(sys.uPointScale, pointScale);
+            if (sys.uTex) gl.uniform1i(sys.uTex, 0);
+            for (var i = 0; i < sys.attribs.length; i++) {
+              var at = sys.attribs[i];
+              gl.bindBuffer(gl.ARRAY_BUFFER, at.buf);
+              gl.enableVertexAttribArray(at.loc);
+              gl.vertexAttribPointer(at.loc, at.size, gl.FLOAT, false, 0, 0);
+            }
+            gl.drawArrays(gl.POINTS, 0, sys.count);
+            for (var j = 0; j < sys.attribs.length; j++) gl.disableVertexAttribArray(sys.attribs[j].loc);
+          }
+
+          /* Camera orbits and descends in sync with the scroll position:
+             it opens looking up at the star crown and ends looking down
+             into the city base, while uPhase rotates the strands at the
+             same 1.83 rate as the panels and the 2D helical ribbon. */
+          function render(display, now) {
+            if (lost) return;
+            var total = fallbackPanels.length - 1;
+            var cp = total > 0 ? Math.max(0, Math.min(1, display / total)) : 0;
+            var ang = cp * 0.9;
+            var camRadius = 6.4;
+            var eye = [Math.sin(ang) * camRadius, 2.6 + (-1.9 - 2.6) * cp, Math.cos(ang) * camRadius];
+            var lookY = 1.5 + (-1.2 - 1.5) * cp;
+            var aspect = glCanvas.width / Math.max(1, glCanvas.height);
+            var proj = perspective(42 * Math.PI / 180, aspect, 0.1, 60);
+            var view = lookAt(eye, [0, lookY, 0]);
+            var phase = display * 1.83;
+            var time = now * 0.001;
+            var pointScale = glCanvas.height / (2 * Math.tan(21 * Math.PI / 180));
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            for (var i = 0; i < systems.length; i++) drawSystem(systems[i], proj, view, phase, time, pointScale);
+          }
+
+          return {
+            resize: resize,
+            render: render,
+            isActive: function () { return !lost; }
+          };
+        }
 
         function fallbackEase(value) {
           /* Linear scroll mapping. The previous dwell-plateau ease froze the
@@ -61,6 +397,7 @@
           canvas.style.width = window.innerWidth + 'px';
           canvas.style.height = window.innerHeight + 'px';
           ctx.setTransform(canvasRatio,0,0,canvasRatio,0,0);
+          if (spine) spine.resize();
           /* Pre-render the static background gradient once per resize; the
              per-frame paint then just blits it instead of rebuilding a
              full-screen radial gradient 60 times a second. */
@@ -169,7 +506,8 @@
           var settled = fallbackDisplay === fallbackTarget;
           var velocity = fallbackDisplay - before;
           fallbackRing.style.transform = 'none';
-          if (cityImg) {
+          var spineActive = !!(spine && spine.isActive());
+          if (cityImg && !spineActive) {
             var cp = fallbackDisplay / (fallbackPanels.length - 1);
             var ih = window.innerHeight;
             var imgH = ih * 1.9;
@@ -179,6 +517,15 @@
             var oStr2 = '50% ' + (focal * 100).toFixed(1) + '%';
             if (cityImg._t !== cStr) { cityImg._t = cStr; cityImg.style.transform = cStr; }
             if (cityImg._o !== oStr2) { cityImg._o = oStr2; cityImg.style.transformOrigin = oStr2; }
+          }
+          if (spineActive) {
+            /* In low-power mode the spine only re-renders when the scroll
+               position has actually moved, so a weak GPU is never ground
+               down by a near-static scene. */
+            if (!fallbackLowPower || Math.abs(fallbackDisplay - spineLastDisplay) > 0.001) {
+              spine.render(fallbackDisplay, now);
+              spineLastDisplay = fallbackDisplay;
+            }
           }
           var nearest = Math.max(0,Math.min(fallbackPanels.length-1,Math.round(fallbackDisplay)));
           fallbackPanels.forEach(function(panel,index){
@@ -272,6 +619,8 @@
             if (fallbackVisible) fallbackKick();
           },{threshold:.01}).observe(orbitExperience);
         }
+        spine = initSpine();
+        if (spine) document.documentElement.classList.add('spine-on');
         fallbackResize(); fallbackTargetFromScroll(); fallbackKick();
         return;
       }
