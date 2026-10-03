@@ -405,7 +405,7 @@
           fallbackBg.height = canvas.height;
           var bgCtx = fallbackBg.getContext('2d');
           var bgGrad = bgCtx.createRadialGradient(canvas.width*.5,canvas.height*.5,0,canvas.width*.5,canvas.height*.5,Math.max(canvas.width,canvas.height)*.78);
-          bgGrad.addColorStop(0,'#030b1e'); bgGrad.addColorStop(.28,'#01030a'); bgGrad.addColorStop(1,'#000000');
+          bgGrad.addColorStop(0,'#060606'); bgGrad.addColorStop(.28,'#010101'); bgGrad.addColorStop(1,'#000000');
           bgCtx.fillStyle = bgGrad; bgCtx.fillRect(0,0,canvas.width,canvas.height);
           fallbackStaticDrawn = false;
           fallbackTargetFromScroll();
@@ -430,10 +430,10 @@
             ctx.beginPath();
             ctx.moveTo(-w*.18,cy+offset+Math.sin(t+i)*18);
             ctx.bezierCurveTo(w*.2,cy-95+offset,w*.76,cy+95+offset,w*1.18,cy+Math.cos(t+i)*22+offset);
-            ctx.strokeStyle='rgba('+(46+i*8)+','+(124+i*15)+',255,'+(alpha*.30)+')';
+            ctx.strokeStyle='rgba('+(46+i*8)+','+(124+i*15)+',255,'+(alpha*.30*.4)+')';
             ctx.lineWidth=i===2?7.5:3.6;
             ctx.stroke();
-            ctx.strokeStyle='rgba('+(46+i*8)+','+(124+i*15)+',255,'+alpha+')';
+            ctx.strokeStyle='rgba('+(46+i*8)+','+(124+i*15)+',255,'+(alpha*.4)+')';
             ctx.lineWidth=i===2?2.4:1.15;
             ctx.stroke();
           }
