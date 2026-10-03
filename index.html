@@ -664,7 +664,7 @@
     .stage-core-label { color:rgba(211,234,255,.78); text-shadow:0 2px 20px #020a20; }
     .stage-core-label strong { color:#f5f9ff; }
     .orbit-scene > .orbit-ring { transform:none!important; }
-    .orbit-panel { transform:none; opacity:0; transform-origin:50% 50%; backface-visibility:hidden; }
+    .orbit-panel { transform:none; opacity:0; transform-origin:50% 50%; backface-visibility:hidden; will-change:transform; }
     .orbit-card { left:50%; top:50%; width:min(calc(100vw - 300px),980px); max-height:calc(100svh - 190px); transform:translate(-50%,-50%) translateZ(1px); padding:clamp(28px,3vw,46px); border-color:rgba(91,181,255,.4); border-radius:24px; background:linear-gradient(145deg,rgba(7,28,66,.86),rgba(2,12,34,.82)); box-shadow:0 40px 110px rgba(0,4,22,.62),0 0 0 1px rgba(75,167,255,.12),0 0 70px rgba(46,124,246,.25),inset 0 1px rgba(255,255,255,.075); scrollbar-color:rgba(75,169,255,.48) transparent; }
     /* No backdrop-filter on the active card: it forced the browser to
        re-blur the animated background every frame and was a major cause
@@ -1257,12 +1257,14 @@
         });
 
         function fallbackEase(value) {
-          var low = Math.floor(value), fraction = value - low;
-          if (low >= fallbackPanels.length - 1) return fallbackPanels.length - 1;
-          if (fraction <= .1) return low;
-          if (fraction >= .9) return low + 1;
-          var t = (fraction - .1) / .8;
-          return low + t * t * (3 - 2 * t);
+          /* Linear scroll mapping. The previous dwell-plateau ease froze the
+             target for the first and last 10% of every segment, which made
+             the first and last panels feel glued in place when trying to
+             scroll away from them. The frame loop's time-based damping
+             provides all the softness the motion needs. */
+          if (value <= 0) return 0;
+          if (value >= fallbackPanels.length - 1) return fallbackPanels.length - 1;
+          return value;
         }
         function fallbackTargetFromScroll() {
           var distance = Math.max(1, orbitExperience.offsetHeight - window.innerHeight);
@@ -1356,6 +1358,7 @@
         var fallbackLastTime = 0;
         var fallbackLastNearest = -1;
         var fallbackLastArt = 0;
+        var fallbackLastScroll = 0;
         var fallbackEma = 16.7;
         var fallbackFrames = 0;
         var fallbackLowPower = false;
@@ -1451,7 +1454,7 @@
              for it entirely. */
           if (fallbackLowPower) {
             if (!fallbackStaticDrawn) { fallbackArtwork(now, 0); fallbackStaticDrawn = true; }
-          } else if (now - fallbackLastArt >= 32) {
+          } else if (now - fallbackLastArt >= 32 && now - fallbackLastScroll > 160) {
             fallbackArtwork(now, velocity);
             fallbackLastArt = now;
           }
@@ -1475,7 +1478,7 @@
           var map={'#main':0,'#services':1,'#process':2,'#live':5,'#about':6,'#contact':7};
           var index=map[link.getAttribute('href')]; if(typeof index==='number'){event.preventDefault();fallbackGo(index);}
         });
-        window.addEventListener('scroll',function(){ fallbackTargetFromScroll(); fallbackKick(); },{passive:true});
+        window.addEventListener('scroll',function(){ fallbackLastScroll = performance.now(); fallbackTargetFromScroll(); fallbackKick(); },{passive:true});
         window.addEventListener('resize',fallbackResize,{passive:true});
         document.addEventListener('visibilitychange',function(){ if (!document.hidden) fallbackKick(); });
         if ('IntersectionObserver' in window) {
