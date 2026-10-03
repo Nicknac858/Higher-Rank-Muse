@@ -18,9 +18,6 @@
         var fallbackProgress = document.querySelector('.orbit-progress');
         var fallbackCount = document.getElementById('orbit-count');
         var fallbackTitle = document.getElementById('orbit-title');
-        var plateTop = document.getElementById('plate-top');
-        var plateDescent = document.getElementById('plate-descent');
-        var plateSurface = document.getElementById('plate-surface');
         var fallbackDots = [];
         var fallbackTarget = 0;
         var fallbackDisplay = 0;
@@ -50,7 +47,12 @@
            canvas; the plates stay visible underneath either way.
            The point systems (starfield, helical strands, star crown,
            city base, rising motes, sparkle glints) share two generated
-           sprite textures; additive blending, no depth test. */
+           sprite textures. Volumetric mesh bodies layer over them —
+           helical light tubes, a glass core, light shafts, a reflective
+           ground disc with a mirrored city, and a nebula dust field —
+           each built independently and skipped if its shader fails.
+           Additive blending, no depth test throughout: draw order and
+           the shaders carry all the depth. */
         function initSpine() {
           var glCanvas = document.getElementById('orbit-spine');
           if (!glCanvas) return null;
@@ -171,7 +173,8 @@
             '  gl_PointSize = size * mix(1.0, 3.4, isHalo) * uPointScale / max(1.0, -mv.z);',
             '  vColor = mix(base, vec3(1.0), mix(0.45, 0.05, isHalo));',
             '  vColor = mix(vColor, vec3(1.0), min(0.6, cg * 0.45));',
-            '  vAlpha = 0.85 * energy * uBreath * mix(1.0, 0.15, isHalo) * (0.75 + cg * (0.5 + uEnv));',
+            '  float hazeF = exp(-max(0.0, -mv.z - 6.0) * 0.05);',
+            '  vAlpha = 0.85 * energy * uBreath * mix(1.0, 0.15, isHalo) * (0.75 + cg * (0.5 + uEnv)) * hazeF;',
             '}'
           ].join('\n');
 
@@ -195,15 +198,19 @@
             '  gl_Position = uProj * mv;',
             '  float flick = 0.72 + 0.28 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7);',
             '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
+            '  float hazeF = exp(-max(0.0, -mv.z - 6.0) * 0.05);',
             '  vColor = aColor;',
-            '  vAlpha = flick * aAlpha * uBreath;',
+            '  vAlpha = flick * aAlpha * uBreath * hazeF;',
             '}'
           ].join('\n');
 
           /* City variant: a lived-in settlement flicker — a wider swing
              (0.45–1.0) plus hash-driven blink-outs that drop ~8% of the
              lights to 25% alpha at any moment, each on its own clock.
-             The one large ground-glow sprite (aSize > 0.5) never blinks. */
+             The one large ground-glow sprite (aSize > 0.5) never blinks.
+             Two extra uniforms drive the mirrored draw: uMirror flips
+             each light across the ground plane (y = -2.32) with a softer,
+             larger sprite so the settlement reflects on the dark ground. */
           var cityVs = [
             'attribute vec3 aPos;',
             'attribute float aSize;',
@@ -215,18 +222,23 @@
             'uniform float uTime;',
             'uniform float uPointScale;',
             'uniform float uBreath;',
+            'uniform float uMirror;',
+            'uniform float uAlphaMul;',
             'varying vec3 vColor;',
             'varying float vAlpha;',
             'void main(){',
-            '  vec4 mv = uView * vec4(aPos, 1.0);',
+            '  vec3 pos = aPos;',
+            '  if (uMirror > 0.5) pos.y = -4.64 - aPos.y;',
+            '  vec4 mv = uView * vec4(pos, 1.0);',
             '  gl_Position = uProj * mv;',
             '  float flick = 0.45 + 0.55 * (0.5 + 0.5 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7));',
             '  float stepIdx = floor(uTime * (0.5 + aRand));',
             '  float hash = fract(sin(aRand * 127.1 + stepIdx * 311.7) * 43758.5453);',
             '  float blink = (hash < 0.08 && aSize < 0.5) ? 0.25 : 1.0;',
-            '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
+            '  gl_PointSize = aSize * mix(1.0, 1.35, uMirror) * uPointScale / max(1.0, -mv.z);',
+            '  float hazeF = exp(-max(0.0, -mv.z - 6.0) * 0.05);',
             '  vColor = aColor;',
-            '  vAlpha = flick * blink * aAlpha * uBreath;',
+            '  vAlpha = flick * blink * aAlpha * uBreath * uAlphaMul * hazeF;',
             '}'
           ].join('\n');
 
@@ -251,8 +263,9 @@
             '  float flick = 0.72 + 0.28 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7);',
             '  float breathe = 1.0 + 0.12 * step(0.5, aSize) * (0.5 + 0.5 * sin(uTime * 0.9));',
             '  gl_PointSize = aSize * breathe * uPointScale / max(1.0, -mv.z);',
+            '  float hazeF = exp(-max(0.0, -mv.z - 6.0) * 0.05);',
             '  vColor = aColor;',
-            '  vAlpha = flick * aAlpha * uBreath;',
+            '  vAlpha = flick * aAlpha * uBreath * hazeF;',
             '}'
           ].join('\n');
 
@@ -278,7 +291,8 @@
             '  gl_Position = uProj * mv;',
             '  gl_PointSize = (0.025 + aRand * 0.04) * uPointScale / max(1.0, -mv.z);',
             '  vColor = mix(vec3(0.40, 0.80, 1.0), vec3(0.85, 0.95, 1.0), aRand);',
-            '  vAlpha = 0.55 * sin(s * 3.14159265) * uBreath;',
+            '  float hazeF = exp(-max(0.0, -mv.z - 6.0) * 0.05);',
+            '  vAlpha = 0.55 * sin(s * 3.14159265) * uBreath * hazeF;',
             '}'
           ].join('\n');
 
@@ -307,7 +321,8 @@
             '  float flash = pow(max(0.0, sin(uTime * (0.5 + aRand * 0.9) + aRand * 61.0)), 24.0);',
             '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
             '  vColor = vec3(0.88, 0.96, 1.0);',
-            '  vAlpha = flash * uBreath;',
+            '  float hazeF = exp(-max(0.0, -mv.z - 6.0) * 0.05);',
+            '  vAlpha = flash * uBreath * hazeF;',
             '}'
           ].join('\n');
 
@@ -323,6 +338,37 @@
               uPointScale: gl.getUniformLocation(prog, 'uPointScale'),
               uBreath: gl.getUniformLocation(prog, 'uBreath'),
               uTex: gl.getUniformLocation(prog, 'uTex')
+            };
+            for (var name in data) {
+              var loc = gl.getAttribLocation(prog, name);
+              if (loc < 0) continue;
+              var buf = gl.createBuffer();
+              gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+              gl.bufferData(gl.ARRAY_BUFFER, data[name].values, gl.STATIC_DRAW);
+              sys.attribs.push({ loc: loc, buf: buf, size: data[name].size });
+              sys.count = data[name].values.length / data[name].size;
+            }
+            return sys.count > 0 ? sys : null;
+          }
+
+          /* Mesh counterpart to makeSystem for the volumetric bodies:
+             same attribute-map shape and the same degrade-independently
+             contract — a failed program yields null and drawAll skips
+             just that element. Meshes draw untextured triangles with
+             per-fragment fresnel shading; count comes from any attribute
+             (all share the same vertex count). */
+          function makeMesh(vsSrc, fsMeshSrc, data, mode) {
+            var prog = buildProgram(vsSrc, fsMeshSrc);
+            if (!prog) return null;
+            var sys = {
+              prog: prog, mode: mode, count: 0, attribs: [],
+              uProj: gl.getUniformLocation(prog, 'uProj'),
+              uView: gl.getUniformLocation(prog, 'uView'),
+              uPhase: gl.getUniformLocation(prog, 'uPhase'),
+              uTime: gl.getUniformLocation(prog, 'uTime'),
+              uBreath: gl.getUniformLocation(prog, 'uBreath'),
+              uEnv: gl.getUniformLocation(prog, 'uEnv'),
+              uCourse: gl.getUniformLocation(prog, 'uCourse')
             };
             for (var name in data) {
               var loc = gl.getAttribLocation(prog, name);
@@ -420,6 +466,8 @@
             aAlpha: { values: new Float32Array(cityAlpha), size: 1 }
           }, softTex);
           if (!cityBase) return null;
+          cityBase.uMirror = gl.getUniformLocation(cityBase.prog, 'uMirror');
+          cityBase.uAlphaMul = gl.getUniformLocation(cityBase.prog, 'uAlphaMul');
 
           /* Rising motes: 220 points drifting up the column volume. */
           var moteS = [], moteRand = [];
@@ -471,7 +519,400 @@
           }, sparkleTex);
           if (!starfield) return null;
 
-          var systems = [starfield, strands, crown, cityBase, motes, glints];
+          /* ---- Volumetric bodies: real geometry over the point cloud ----
+             Each element builds independently below; if any one shader
+             fails, its variable stays null and drawAll skips just that
+             element. All mesh shaders share one varying set (vColor,
+             vAlpha, vNorm, vView, vAux, vDist) and the same manual depth
+             haze as the point shaders, so distant geometry melts into
+             the black. Depth test stays OFF; draw order is the depth. */
+
+          /* Helical light tubes: fresnel body shading in the fragment
+             pass — bright where the surface faces the camera, falling
+             away at the silhouette, like a holographic tube of light. */
+          var tubeVs = [
+            'attribute vec3 aPos;',
+            'attribute vec3 aNormal;',
+            'attribute float aS;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uPhase;',
+            'uniform float uBreath;',
+            'uniform float uEnv;',
+            'uniform vec2 uCourse;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  float ca = cos(uPhase);',
+            '  float sa = sin(uPhase);',
+            '  vec3 pos = vec3(ca * aPos.x - sa * aPos.z, aPos.y, sa * aPos.x + ca * aPos.z);',
+            '  vec3 nrm = vec3(ca * aNormal.x - sa * aNormal.z, aNormal.y, sa * aNormal.x + ca * aNormal.z);',
+            '  vec4 mv = uView * vec4(pos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  vNorm = mat3(uView) * nrm;',
+            '  vView = -mv.xyz;',
+            '  vDist = -mv.z;',
+            '  vec3 top = vec3(0.38, 0.93, 1.0);',
+            '  vec3 mid = vec3(0.18, 0.49, 0.96);',
+            '  vec3 bot = vec3(0.80, 0.92, 1.0);',
+            '  vec3 base = aS < 0.5 ? mix(top, mid, aS * 2.0) : mix(mid, bot, (aS - 0.5) * 2.0);',
+            '  float cdx = (aS - uCourse.x) * 6.0;',
+            '  float cdy = (aS - uCourse.y) * 6.0;',
+            '  float cg = exp(-cdx * cdx) * 1.6 + exp(-cdy * cdy) * 1.2;',
+            '  vColor = mix(base, vec3(1.0), min(0.6, cg * 0.45));',
+            '  vAux = cg;',
+            '  vAlpha = uBreath * (0.75 + cg * (0.5 + uEnv));',
+            '}'
+          ].join('\n');
+          var tubeFs = [
+            'precision mediump float;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  float fr = abs(dot(normalize(vNorm), normalize(vView)));',
+            '  float body = 0.14 + 0.95 * pow(fr, 1.5);',
+            '  float haze = exp(-max(0.0, vDist - 6.0) * 0.05);',
+            '  gl_FragColor = vec4(vColor * (0.72 + 0.45 * fr), vAlpha * body * haze);',
+            '}'
+          ].join('\n');
+
+          /* Glass core: a barely-there cylinder the tubes wrap around —
+             fresnel rim alpha plus a faint vertical gradient. */
+          var glassVs = [
+            'attribute vec3 aPos;',
+            'attribute vec3 aNormal;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  vec4 mv = uView * vec4(aPos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  vNorm = mat3(uView) * aNormal;',
+            '  vView = -mv.xyz;',
+            '  vDist = -mv.z;',
+            '  vAux = clamp((aPos.y + 2.3) / 4.65, 0.0, 1.0);',
+            '  vColor = vec3(0.45, 0.72, 1.0);',
+            '  vAlpha = 1.0;',
+            '}'
+          ].join('\n');
+          var glassFs = [
+            'precision mediump float;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  float fr = abs(dot(normalize(vNorm), normalize(vView)));',
+            '  float a = pow(1.0 - fr, 2.5) * 0.32 + vAux * 0.045 + 0.010;',
+            '  float haze = exp(-max(0.0, vDist - 6.0) * 0.05);',
+            '  gl_FragColor = vec4(vColor, a * haze);',
+            '}'
+          ].join('\n');
+
+          /* Light shafts: open cones whose alpha dies along their height
+             and at their silhouette edges, flickering per cone, swelling
+             with the heartbeat envelope (uEnv). */
+          var shaftVs = [
+            'attribute vec3 aPos;',
+            'attribute vec3 aNormal;',
+            'attribute float aH;',
+            'attribute float aPhase;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uTime;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  vec4 mv = uView * vec4(aPos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  vNorm = mat3(uView) * aNormal;',
+            '  vView = -mv.xyz;',
+            '  vDist = -mv.z;',
+            '  vAux = aH;',
+            '  float flick = 0.72 + 0.28 * sin(uTime * (1.1 + aPhase * 1.7) + aPhase * 47.0);',
+            '  vAlpha = flick;',
+            '  vColor = mix(vec3(0.35, 0.62, 1.0), vec3(0.78, 0.90, 1.0), aH * 0.35);',
+            '}'
+          ].join('\n');
+          var shaftFs = [
+            'precision mediump float;',
+            'uniform float uEnv;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  float fr = abs(dot(normalize(vNorm), normalize(vView)));',
+            '  float hf = pow(1.0 - vAux, 1.6);',
+            '  float haze = exp(-max(0.0, vDist - 6.0) * 0.05);',
+            '  float a = hf * pow(fr, 1.2) * 0.20 * vAlpha * (0.65 + 0.65 * uEnv) * haze;',
+            '  gl_FragColor = vec4(vColor, a);',
+            '}'
+          ].join('\n');
+
+          /* Reflective ground: near-black glossy disc — a soft pool of
+             blue glow under the column, a fresnel sheen at grazing
+             angles, fading to pure black at the rim. */
+          var groundVs = [
+            'attribute vec3 aPos;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  vec4 mv = uView * vec4(aPos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  vNorm = mat3(uView) * vec3(0.0, 1.0, 0.0);',
+            '  vView = -mv.xyz;',
+            '  vDist = -mv.z;',
+            '  vAux = length(aPos.xz) / 3.6;',
+            '  vColor = vec3(0.0);',
+            '  vAlpha = 1.0;',
+            '}'
+          ].join('\n');
+          var groundFs = [
+            'precision mediump float;',
+            'uniform float uBreath;',
+            'varying vec3 vNorm;',
+            'varying vec3 vView;',
+            'varying float vAux;',
+            'varying float vDist;',
+            'void main(){',
+            '  float r = vAux;',
+            '  float pool = exp(-r * r * 5.0) * (0.30 + 0.30 * uBreath);',
+            '  vec3 col = vec3(0.10, 0.28, 0.62) * pool;',
+            '  float fr = abs(dot(normalize(vNorm), normalize(vView)));',
+            '  float sheen = pow(1.0 - fr, 3.0) * 0.30 * (1.0 - r * 0.45);',
+            '  col += vec3(0.22, 0.42, 0.72) * sheen;',
+            '  float rim = 1.0 - smoothstep(0.55, 1.0, r);',
+            '  float haze = exp(-max(0.0, vDist - 6.0) * 0.05);',
+            '  gl_FragColor = vec4(col, rim * haze);',
+            '}'
+          ].join('\n');
+
+          /* Nebula dust: the cloud point shader with a very slow orbital
+             drift baked into the vertex stage, so the whole shell creeps
+             around the column while each mote flickers on its own. */
+          var dustVs = [
+            'attribute vec3 aPos;',
+            'attribute float aSize;',
+            'attribute vec3 aColor;',
+            'attribute float aRand;',
+            'attribute float aAlpha;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uTime;',
+            'uniform float uPointScale;',
+            'uniform float uBreath;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  float rot = uTime * 0.006;',
+            '  float ca = cos(rot);',
+            '  float sa = sin(rot);',
+            '  vec3 pos = vec3(ca * aPos.x - sa * aPos.z, aPos.y, sa * aPos.x + ca * aPos.z);',
+            '  vec4 mv = uView * vec4(pos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  float flick = 0.72 + 0.28 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7);',
+            '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
+            '  float hazeF = exp(-max(0.0, -mv.z - 6.0) * 0.05);',
+            '  vColor = aColor;',
+            '  vAlpha = flick * aAlpha * uBreath * hazeF;',
+            '}'
+          ].join('\n');
+
+          /* Tube geometry: two triangle tubes swept along the exact
+             strand helix (240 length steps x 10 radial), radius ~0.085
+             tapering toward both ends. The phase rotation happens in
+             the vertex shader, so the tubes stay registered with the
+             point strands at every scroll position. */
+          var tubes = null;
+          (function buildTubes() {
+            var SEG = 240, RAD = 10;
+            var pos = [], nrm = [], ss = [];
+            function centerAt(s, off) {
+              var ang = s * Math.PI * 7 + off;
+              var radius = 0.55 * (0.75 + 0.25 * Math.sin(s * Math.PI));
+              return [Math.cos(ang) * radius, (0.5 - s) * 4.4, Math.sin(ang) * radius];
+            }
+            function vertAt(s, off, theta) {
+              var c = centerAt(s, off);
+              var cA = centerAt(Math.max(0, s - 0.004), off);
+              var cB = centerAt(Math.min(1, s + 0.004), off);
+              var tx = cB[0] - cA[0], ty = cB[1] - cA[1], tz = cB[2] - cA[2];
+              var tl = Math.sqrt(tx * tx + ty * ty + tz * tz) || 1; tx /= tl; ty /= tl; tz /= tl;
+              var n1x = tz, n1z = -tx;
+              var n1l = Math.sqrt(n1x * n1x + n1z * n1z) || 1; n1x /= n1l; n1z /= n1l;
+              var n2x = ty * n1z, n2y = tz * n1x - tx * n1z, n2z = -ty * n1x;
+              var taper = 0.45 + 0.55 * Math.pow(Math.sin(Math.PI * s), 0.6);
+              var tr = 0.085 * taper;
+              var co = Math.cos(theta), si = Math.sin(theta);
+              var nx = co * n1x + si * n2x, ny = si * n2y, nz = co * n1z + si * n2z;
+              return { p: [c[0] + nx * tr, c[1] + ny * tr, c[2] + nz * tr], n: [nx, ny, nz], s: s };
+            }
+            function emit(v) {
+              pos.push(v.p[0], v.p[1], v.p[2]);
+              nrm.push(v.n[0], v.n[1], v.n[2]);
+              ss.push(v.s);
+            }
+            for (var stI = 0; stI < 2; stI++) {
+              var off = stI * 2.094;
+              var grid = [];
+              for (var i = 0; i <= SEG; i++) {
+                var row = [];
+                for (var j = 0; j <= RAD; j++) row.push(vertAt(i / SEG, off, (j / RAD) * Math.PI * 2));
+                grid.push(row);
+              }
+              for (var q = 0; q < SEG; q++) {
+                for (var r = 0; r < RAD; r++) {
+                  emit(grid[q][r]); emit(grid[q + 1][r]); emit(grid[q + 1][r + 1]);
+                  emit(grid[q][r]); emit(grid[q + 1][r + 1]); emit(grid[q][r + 1]);
+                }
+              }
+            }
+            tubes = makeMesh(tubeVs, tubeFs, {
+              aPos: { values: new Float32Array(pos), size: 3 },
+              aNormal: { values: new Float32Array(nrm), size: 3 },
+              aS: { values: new Float32Array(ss), size: 1 }
+            }, gl.TRIANGLES);
+          })();
+
+          /* Glass core geometry: one open cylinder, 48 segments. */
+          var glassCore = null;
+          (function buildGlass() {
+            var SEG = 48, R = 0.34, Y0 = -2.3, Y1 = 2.35;
+            var pos = [], nrm = [];
+            function emit(x, y, z, a) {
+              pos.push(x, y, z);
+              nrm.push(Math.cos(a), 0, Math.sin(a));
+            }
+            for (var i = 0; i < SEG; i++) {
+              var a0 = (i / SEG) * Math.PI * 2, a1 = ((i + 1) / SEG) * Math.PI * 2;
+              emit(Math.cos(a0) * R, Y0, Math.sin(a0) * R, a0);
+              emit(Math.cos(a1) * R, Y0, Math.sin(a1) * R, a1);
+              emit(Math.cos(a1) * R, Y1, Math.sin(a1) * R, a1);
+              emit(Math.cos(a0) * R, Y0, Math.sin(a0) * R, a0);
+              emit(Math.cos(a1) * R, Y1, Math.sin(a1) * R, a1);
+              emit(Math.cos(a0) * R, Y1, Math.sin(a0) * R, a0);
+            }
+            glassCore = makeMesh(glassVs, glassFs, {
+              aPos: { values: new Float32Array(pos), size: 3 },
+              aNormal: { values: new Float32Array(nrm), size: 3 }
+            }, gl.TRIANGLES);
+          })();
+
+          /* Shaft geometry: 7 seeded cones rising from the city base
+             plus one hero beam from the crown star, merged into a
+             single buffer so the whole set draws in one call. */
+          var shafts = null;
+          (function buildShafts() {
+            var pos = [], nrm = [], hh = [], ph = [];
+            var seed = 987654321;
+            function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+            function emit(px, py, pz, nx, ny, nz, h, phase) {
+              pos.push(px, py, pz);
+              nrm.push(nx, ny, nz);
+              hh.push(h);
+              ph.push(phase);
+            }
+            function cone(cx, cy, cz, height, rBase, phase) {
+              var SEG = 10;
+              var rows = [[], []];
+              for (var j = 0; j <= SEG; j++) {
+                var a = (j / SEG) * Math.PI * 2;
+                var ca = Math.cos(a), sa = Math.sin(a);
+                rows[0].push([cx + ca * rBase, cy, cz + sa * rBase, ca, 0.18, sa, 0]);
+                rows[1].push([cx + ca * rBase * 0.12, cy + height, cz + sa * rBase * 0.12, ca, 0.18, sa, 1]);
+              }
+              for (var j2 = 0; j2 < SEG; j2++) {
+                var b0 = rows[0][j2], b1 = rows[0][j2 + 1], t0 = rows[1][j2], t1 = rows[1][j2 + 1];
+                emit(b0[0], b0[1], b0[2], b0[3], b0[4], b0[5], b0[6], phase);
+                emit(t0[0], t0[1], t0[2], t0[3], t0[4], t0[5], t0[6], phase);
+                emit(t1[0], t1[1], t1[2], t1[3], t1[4], t1[5], t1[6], phase);
+                emit(b0[0], b0[1], b0[2], b0[3], b0[4], b0[5], b0[6], phase);
+                emit(t1[0], t1[1], t1[2], t1[3], t1[4], t1[5], t1[6], phase);
+                emit(b1[0], b1[1], b1[2], b1[3], b1[4], b1[5], b1[6], phase);
+              }
+            }
+            for (var k = 0; k < 7; k++) {
+              var ang = rnd() * Math.PI * 2;
+              var rad = Math.sqrt(rnd()) * 1.6;
+              cone(Math.cos(ang) * rad, -2.3, Math.sin(ang) * rad, 1.8 + rnd() * 1.8, 0.10 + rnd() * 0.10, rnd());
+            }
+            cone(0, 2.32, 0, 3.2, 0.20, rnd());
+            shafts = makeMesh(shaftVs, shaftFs, {
+              aPos: { values: new Float32Array(pos), size: 3 },
+              aNormal: { values: new Float32Array(nrm), size: 3 },
+              aH: { values: new Float32Array(hh), size: 1 },
+              aPhase: { values: new Float32Array(ph), size: 1 }
+            }, gl.TRIANGLES);
+          })();
+
+          /* Ground geometry: a 64-segment triangle fan, radius 3.6. */
+          var ground = null;
+          (function buildGround() {
+            var SEG = 64, R = 3.6, Y = -2.34;
+            var pos = [];
+            for (var i = 0; i < SEG; i++) {
+              var a0 = (i / SEG) * Math.PI * 2, a1 = ((i + 1) / SEG) * Math.PI * 2;
+              pos.push(0, Y, 0);
+              pos.push(Math.cos(a0) * R, Y, Math.sin(a0) * R);
+              pos.push(Math.cos(a1) * R, Y, Math.sin(a1) * R);
+            }
+            ground = makeMesh(groundVs, groundFs, {
+              aPos: { values: new Float32Array(pos), size: 3 }
+            }, gl.TRIANGLES);
+          })();
+
+          /* Nebula dust field: ~1500 motes in a spherical shell
+             (radius 3.5–13) around the column, faint blue-white. */
+          var dustPos = [], dustSize = [], dustColor = [], dustRand = [], dustAlpha = [];
+          for (var di = 0; di < 1500; di++) {
+            var du = Math.random() * 2 - 1;
+            var dth = Math.random() * Math.PI * 2;
+            var dsq = Math.sqrt(1 - du * du);
+            var dr = 3.5 + Math.random() * 9.5;
+            dustPos.push(dsq * Math.cos(dth) * dr, du * dr, dsq * Math.sin(dth) * dr);
+            dustSize.push(0.03 + Math.random() * 0.07);
+            var dPick = Math.random();
+            if (dPick < 0.5) dustColor.push(0.55, 0.72, 1.0);
+            else if (dPick < 0.8) dustColor.push(0.82, 0.90, 1.0);
+            else dustColor.push(0.38, 0.55, 0.95);
+            dustRand.push(Math.random());
+            dustAlpha.push(0.05 + Math.random() * 0.17);
+          }
+          var dust = makeSystem(dustVs, {
+            aPos: { values: new Float32Array(dustPos), size: 3 },
+            aSize: { values: new Float32Array(dustSize), size: 1 },
+            aColor: { values: new Float32Array(dustColor), size: 3 },
+            aRand: { values: new Float32Array(dustRand), size: 1 },
+            aAlpha: { values: new Float32Array(dustAlpha), size: 1 }
+          }, softTex);
 
           /* ---- Bloom pipeline (WebGL1, UNSIGNED_BYTE targets) ----
              Scene renders into an FBO; a separable 9-tap gaussian runs
@@ -506,16 +947,29 @@
             '  gl_FragColor = c;',
             '}'
           ].join('\n');
+          /* Composite grade (bloom path only): chromatic aberration
+             (radial R/B split), a vignette, and animated film grain over
+             the scene + bloom add. */
           var compFs = [
             'precision mediump float;',
             'uniform sampler2D uScene;',
             'uniform sampler2D uBloom;',
             'uniform float uBloomStrength;',
+            'uniform float uTime;',
+            'uniform vec2 uRes;',
             'varying vec2 vUv;',
+            'float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }',
             'void main(){',
-            '  vec4 s = texture2D(uScene, vUv);',
-            '  vec3 b = texture2D(uBloom, vUv).rgb;',
-            '  gl_FragColor = vec4(s.rgb + b * uBloomStrength, s.a);',
+            '  vec2 off = (vUv - 0.5) * 0.0035;',
+            '  vec3 col;',
+            '  col.r = texture2D(uScene, vUv + off).r;',
+            '  col.g = texture2D(uScene, vUv).g;',
+            '  col.b = texture2D(uScene, vUv - off).b;',
+            '  float alpha = texture2D(uScene, vUv).a;',
+            '  col += texture2D(uBloom, vUv).rgb * uBloomStrength;',
+            '  col *= 1.0 - 0.34 * smoothstep(0.55, 1.3, length((vUv - 0.5) * vec2(1.25, 1.0)) * 1.4);',
+            '  col += (hash(vUv * uRes + fract(uTime) * 371.0) - 0.5) * 0.05;',
+            '  gl_FragColor = vec4(col, alpha);',
             '}'
           ].join('\n');
           var blurProg = buildProgram(postVs, blurFs);
@@ -527,6 +981,8 @@
           var compUScene = compProg ? gl.getUniformLocation(compProg, 'uScene') : null;
           var compUBloom = compProg ? gl.getUniformLocation(compProg, 'uBloom') : null;
           var compUBloomStrength = compProg ? gl.getUniformLocation(compProg, 'uBloomStrength') : null;
+          var compUTime = compProg ? gl.getUniformLocation(compProg, 'uTime') : null;
+          var compURes = compProg ? gl.getUniformLocation(compProg, 'uRes') : null;
           var quadBuf = gl.createBuffer();
           gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
           gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -623,7 +1079,8 @@
 
           /* Quality governor: EMA of frame delta drives four tiers —
              0: DPR up to 2 + bloom; 1: DPR 1.5 + bloom; 2: DPR 1.25 +
-             bloom; 3: DPR 1, no bloom, halo layer skipped. Steps down
+             bloom, mirrored city skipped; 3: DPR 1, no bloom, halo
+             layer skipped, dust/shafts/glass/mirror skipped. Steps down
              after ~90 sustained slow frames, back up only after ~600
              fast frames, at most one change per 1.5s. */
           var DPR_TIERS = [2, 1.5, 1.25, 1];
@@ -666,7 +1123,19 @@
           }
           resize();
 
-          function drawSystem(sys, proj, view, phase, time, pointScale, breath, count, env, course) {
+          /* Mouse parallax (fine pointers only): the target is normalized
+             -0.5..0.5 across the window and exponentially smoothed in
+             render, then layered on top of the scroll orbit math so the
+             camera leans gently toward the cursor. */
+          var mouseTX = 0, mouseTY = 0, mouseSX = 0, mouseSY = 0;
+          if (window.matchMedia && window.matchMedia('(pointer:fine)').matches) {
+            window.addEventListener('pointermove', function (event) {
+              mouseTX = event.clientX / Math.max(1, window.innerWidth) - 0.5;
+              mouseTY = event.clientY / Math.max(1, window.innerHeight) - 0.5;
+            }, { passive: true });
+          }
+
+          function drawSystem(sys, proj, view, phase, time, pointScale, breath, count, env, course, mirror, alphaMul) {
             gl.useProgram(sys.prog);
             gl.uniformMatrix4fv(sys.uProj, false, proj);
             gl.uniformMatrix4fv(sys.uView, false, view);
@@ -676,6 +1145,8 @@
             if (sys.uBreath) gl.uniform1f(sys.uBreath, breath);
             if (sys.uEnv) gl.uniform1f(sys.uEnv, env);
             if (sys.uCourse) gl.uniform2f(sys.uCourse, course[0], course[1]);
+            if (sys.uMirror) gl.uniform1f(sys.uMirror, mirror || 0);
+            if (sys.uAlphaMul) gl.uniform1f(sys.uAlphaMul, alphaMul == null ? 1 : alphaMul);
             if (sys.uTex) gl.uniform1i(sys.uTex, 0);
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, sys.tex);
@@ -688,15 +1159,46 @@
             gl.drawArrays(gl.POINTS, 0, count);
             for (var j = 0; j < sys.attribs.length; j++) gl.disableVertexAttribArray(sys.attribs[j].loc);
           }
+          function drawMesh(sys, proj, view, phase, time, breath, env, course) {
+            gl.useProgram(sys.prog);
+            gl.uniformMatrix4fv(sys.uProj, false, proj);
+            gl.uniformMatrix4fv(sys.uView, false, view);
+            if (sys.uPhase) gl.uniform1f(sys.uPhase, phase);
+            if (sys.uTime) gl.uniform1f(sys.uTime, time);
+            if (sys.uBreath) gl.uniform1f(sys.uBreath, breath);
+            if (sys.uEnv) gl.uniform1f(sys.uEnv, env);
+            if (sys.uCourse) gl.uniform2f(sys.uCourse, course[0], course[1]);
+            for (var i = 0; i < sys.attribs.length; i++) {
+              var at = sys.attribs[i];
+              gl.bindBuffer(gl.ARRAY_BUFFER, at.buf);
+              gl.enableVertexAttribArray(at.loc);
+              gl.vertexAttribPointer(at.loc, at.size, gl.FLOAT, false, 0, 0);
+            }
+            gl.drawArrays(sys.mode, 0, sys.count);
+            for (var j = 0; j < sys.attribs.length; j++) gl.disableVertexAttribArray(sys.attribs[j].loc);
+          }
           function drawAll(proj, view, phase, time, pointScale, breath, env, course) {
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-            for (var i = 0; i < systems.length; i++) {
-              var sys = systems[i];
-              var n = sys.count;
-              if (tier >= 3 && sys.haloStart) n = sys.haloStart;
-              drawSystem(sys, proj, view, phase, time, pointScale, breath, n, env, course);
-            }
+            /* Draw order is the depth cue (depth test stays off): far
+               dust and the ground first, the mirrored city under the
+               glass, then the volumetric bodies, and the bright point
+               systems last so they sit on top of everything. The
+               governor sheds the expensive layers by tier: tier 2 drops
+               the mirrored city, tier 3 also drops dust, shafts and the
+               glass core — points and tubes always remain. */
+            if (tier < 3 && dust) drawSystem(dust, proj, view, phase, time, pointScale, breath, dust.count, env, course);
+            if (ground) drawMesh(ground, proj, view, phase, time, breath, env, course);
+            if (tier < 2) drawSystem(cityBase, proj, view, phase, time, pointScale, breath, cityBase.count, env, course, 1, 0.32);
+            if (tier < 3 && glassCore) drawMesh(glassCore, proj, view, phase, time, breath, env, course);
+            if (tubes) drawMesh(tubes, proj, view, phase, time, breath, env, course);
+            if (tier < 3 && shafts) drawMesh(shafts, proj, view, phase, time, breath, env, course);
+            drawSystem(starfield, proj, view, phase, time, pointScale, breath, starfield.count, env, course);
+            drawSystem(strands, proj, view, phase, time, pointScale, breath, tier >= 3 ? strands.haloStart : strands.count, env, course);
+            drawSystem(crown, proj, view, phase, time, pointScale, breath, crown.count, env, course);
+            drawSystem(cityBase, proj, view, phase, time, pointScale, breath, cityBase.count, env, course);
+            drawSystem(motes, proj, view, phase, time, pointScale, breath, motes.count, env, course);
+            drawSystem(glints, proj, view, phase, time, pointScale, breath, glints.count, env, course);
           }
 
           /* Heartbeat: a lub-dub envelope with an irregular rhythm. Each
@@ -778,9 +1280,13 @@
             var camRadius = 6.4;
             var eye = [Math.sin(ang) * camRadius, 2.6 + (-1.9 - 2.6) * cp, Math.cos(ang) * camRadius];
             var lookY = 1.5 + (-1.2 - 1.5) * cp;
+            mouseSX += (mouseTX - mouseSX) * 0.05;
+            mouseSY += (mouseTY - mouseSY) * 0.05;
+            eye[0] += mouseSX * 0.45;
+            eye[1] += -mouseSY * 0.28;
             var aspect = glCanvas.width / Math.max(1, glCanvas.height);
             var proj = perspective(42 * Math.PI / 180, aspect, 0.1, 60);
-            var view = lookAt(eye, [0, lookY, 0]);
+            var view = lookAt(eye, [mouseSX * 0.35, lookY, 0]);
             var phase = display * 1.83;
             var time = now * 0.001;
             var pointScale = glCanvas.height / (2 * Math.tan(21 * Math.PI / 180));
@@ -813,6 +1319,8 @@
               gl.bindTexture(gl.TEXTURE_2D, blurB.tex);
               gl.uniform1i(compUBloom, 1);
               if (compUBloomStrength) gl.uniform1f(compUBloomStrength, bloomFactor);
+              if (compUTime) gl.uniform1f(compUTime, time);
+              if (compURes) gl.uniform2f(compURes, glCanvas.width, glCanvas.height);
               drawQuad(compAPos);
               gl.activeTexture(gl.TEXTURE0);
             } else {
@@ -940,17 +1448,6 @@
             requestAnimationFrame(fallbackFrame);
           }
         }
-        function smoothstep(x, a, b) {
-          var t = Math.max(0, Math.min(1, (x - a) / (b - a)));
-          return t * t * (3 - 2 * t);
-        }
-        function drivePlate(img, opacity, scaleV, tyPct) {
-          if (!img) return;
-          var oStr = opacity.toFixed(3);
-          if (img._o !== oStr) { img._o = oStr; img.style.opacity = oStr; }
-          var tStr = 'translateY(' + tyPct.toFixed(2) + '%) scale(' + scaleV.toFixed(3) + ')';
-          if (img._t !== tStr) { img._t = tStr; img.style.transform = tStr; }
-        }
         function fallbackFrame(now) {
           if (!fallbackVisible || document.hidden) { fallbackRunning = false; return; }
           /* Time-based damping: the old per-frame lerp (display += delta*.15)
@@ -977,20 +1474,6 @@
           var velocity = fallbackDisplay - before;
           fallbackRing.style.transform = 'none';
           var spineActive = !!(spine && spine.isActive());
-          /* Plate stack driver: the three photoreal plates are the world
-             inside the central column and are ALWAYS visible (the spine
-             draws on top of them when GL is live; when it is not, the
-             plates carry the journey alone). Crossfades are smoothstep
-             windows over cp; every plate slowly pushes in (scale 1.06 ->
-             1.17) while its translateY drifts so the view feels like a
-             camera descending through the stack. */
-          var plateCp = Math.max(0, Math.min(1, fallbackDisplay / (fallbackPanels.length - 1)));
-          var fadeA = smoothstep(plateCp, .30, .52);
-          var fadeB = smoothstep(plateCp, .72, .90);
-          var plateScale = 1.06 + plateCp * .11;
-          drivePlate(plateTop, 1 - fadeA, plateScale, plateCp * -3.5);
-          drivePlate(plateDescent, fadeA * (1 - fadeB), plateScale, 1.5 - plateCp * 3);
-          drivePlate(plateSurface, fadeB, plateScale, 3.5 - plateCp * 3.5);
           if (spineActive) {
             /* In low-power mode the spine only re-renders when the scroll
                position has actually moved, so a weak GPU is never ground
