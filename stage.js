@@ -18,7 +18,9 @@
         var fallbackProgress = document.querySelector('.orbit-progress');
         var fallbackCount = document.getElementById('orbit-count');
         var fallbackTitle = document.getElementById('orbit-title');
-        var cityImg = document.getElementById('orbit-city');
+        var plateTop = document.getElementById('plate-top');
+        var plateDescent = document.getElementById('plate-descent');
+        var plateSurface = document.getElementById('plate-surface');
         var fallbackDots = [];
         var fallbackTarget = 0;
         var fallbackDisplay = 0;
@@ -40,14 +42,15 @@
 
         /* Real-time 3D spine: a glowing helical column of light rendered in
            raw WebGL1 (no libraries, no external assets) that the panels
-           revolve around. The city photo remains the fallback: if the GL
-           context or any shader fails, initSpine returns null and the
-           photo journey runs exactly as before. On success the html element
-           gets the 'spine-on' class, which swaps the photo for this canvas.
-           Four tiny point systems (helical strands, star crown, city base,
-           rising motes) share one generated sprite texture; additive
-           blending, no depth test, DPR capped at 1 — under ~1400 points
-           and 4 draw calls, so it stays feather-light. */
+           revolve around. It draws ON TOP of the photoreal plate stack
+           (the world inside the central column): if the GL context or any
+           shader fails, initSpine returns null and the plates still
+           crossfade on their own via the scroll driver. On success the
+           html element gets the 'spine-on' class, which reveals this
+           canvas; the plates stay visible underneath either way.
+           The point systems (starfield, helical strands, star crown,
+           city base, rising motes, sparkle glints) share two generated
+           sprite textures; additive blending, no depth test. */
         function initSpine() {
           var glCanvas = document.getElementById('orbit-spine');
           if (!glCanvas) return null;
@@ -144,6 +147,8 @@
             'uniform float uTime;',
             'uniform float uPointScale;',
             'uniform float uBreath;',
+            'uniform float uEnv;',
+            'uniform vec2 uCourse;',
             'varying vec3 vColor;',
             'varying float vAlpha;',
             'void main(){',
@@ -159,10 +164,14 @@
             '  float pulse = 0.85 + 0.15 * sin(uTime * 2.2 + aS * 18.0 + aStrand * 2.1);',
             '  float size = (0.05 + 0.055 * sin(aS * 3.14159265)) * (0.8 + aRand * 0.4) * pulse;',
             '  float energy = 1.0 + 0.9 * pow(0.5 + 0.5 * sin(aS * 24.0 - uTime * 2.6 + aStrand * 2.1), 3.0);',
+            '  float cdx = (aS - uCourse.x) * 6.0;',
+            '  float cdy = (aS - uCourse.y) * 6.0;',
+            '  float cg = exp(-cdx * cdx) * 1.6 + exp(-cdy * cdy) * 1.2;',
             '  float isHalo = step(0.5, aLayer);',
             '  gl_PointSize = size * mix(1.0, 3.4, isHalo) * uPointScale / max(1.0, -mv.z);',
             '  vColor = mix(base, vec3(1.0), mix(0.45, 0.05, isHalo));',
-            '  vAlpha = 0.85 * energy * uBreath * mix(1.0, 0.15, isHalo);',
+            '  vColor = mix(vColor, vec3(1.0), min(0.6, cg * 0.45));',
+            '  vAlpha = 0.85 * energy * uBreath * mix(1.0, 0.15, isHalo) * (0.75 + cg * (0.5 + uEnv));',
             '}'
           ].join('\n');
 
@@ -188,6 +197,36 @@
             '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
             '  vColor = aColor;',
             '  vAlpha = flick * aAlpha * uBreath;',
+            '}'
+          ].join('\n');
+
+          /* City variant: a lived-in settlement flicker — a wider swing
+             (0.45–1.0) plus hash-driven blink-outs that drop ~8% of the
+             lights to 25% alpha at any moment, each on its own clock.
+             The one large ground-glow sprite (aSize > 0.5) never blinks. */
+          var cityVs = [
+            'attribute vec3 aPos;',
+            'attribute float aSize;',
+            'attribute vec3 aColor;',
+            'attribute float aRand;',
+            'attribute float aAlpha;',
+            'uniform mat4 uProj;',
+            'uniform mat4 uView;',
+            'uniform float uTime;',
+            'uniform float uPointScale;',
+            'uniform float uBreath;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '  vec4 mv = uView * vec4(aPos, 1.0);',
+            '  gl_Position = uProj * mv;',
+            '  float flick = 0.45 + 0.55 * (0.5 + 0.5 * sin(uTime * (1.2 + aRand * 2.6) + aRand * 43.7));',
+            '  float stepIdx = floor(uTime * (0.5 + aRand));',
+            '  float hash = fract(sin(aRand * 127.1 + stepIdx * 311.7) * 43758.5453);',
+            '  float blink = (hash < 0.08 && aSize < 0.5) ? 0.25 : 1.0;',
+            '  gl_PointSize = aSize * uPointScale / max(1.0, -mv.z);',
+            '  vColor = aColor;',
+            '  vAlpha = flick * blink * aAlpha * uBreath;',
             '}'
           ].join('\n');
 
@@ -325,6 +364,8 @@
           }, softTex);
           if (!strands) return null;
           strands.haloStart = baseS.length;
+          strands.uCourse = gl.getUniformLocation(strands.prog, 'uCourse');
+          strands.uEnv = gl.getUniformLocation(strands.prog, 'uEnv');
 
           /* Star crown: one large sparkle sprite at the top plus sparkles,
              all on the sparkle texture. */
@@ -359,8 +400,9 @@
             cityPos.push(Math.cos(bAng) * bRad, -2.3 + (Math.random() - 0.5) * 0.05, Math.sin(bAng) * bRad);
             citySize.push(0.025 + Math.random() * 0.045);
             var bPick = Math.random();
-            if (bPick < 0.45) cityColor.push(0.18, 0.49, 0.96);
-            else if (bPick < 0.8) cityColor.push(0.38, 0.85, 1.0);
+            if (bPick < 0.12) cityColor.push(1.0, 0.78, 0.5);
+            else if (bPick < 0.5) cityColor.push(0.18, 0.49, 0.96);
+            else if (bPick < 0.82) cityColor.push(0.38, 0.85, 1.0);
             else cityColor.push(0.82, 0.92, 1.0);
             cityRand.push(Math.random());
             cityAlpha.push(0.85);
@@ -370,7 +412,7 @@
           cityColor.push(0.18, 0.49, 0.96);
           cityRand.push(0.5);
           cityAlpha.push(0.10);
-          var cityBase = makeSystem(cloudVs, {
+          var cityBase = makeSystem(cityVs, {
             aPos: { values: new Float32Array(cityPos), size: 3 },
             aSize: { values: new Float32Array(citySize), size: 1 },
             aColor: { values: new Float32Array(cityColor), size: 3 },
@@ -405,12 +447,37 @@
           }, sparkleTex);
           if (!glints) return null;
 
-          var systems = [strands, crown, cityBase, motes, glints];
+          /* Starfield: ~420 static stars on a far plane behind the
+             column, sparkle sprites under the gentle cloud flicker, so
+             the sky itself twinkles in front of the plates' painted
+             stars. Drawn first of all the systems (additive blending). */
+          var starPos = [], starSize = [], starColor = [], starRand = [], starAlpha = [];
+          for (var fi = 0; fi < 420; fi++) {
+            starPos.push(-7.5 + Math.random() * 15, -4.5 + Math.random() * 9, -9);
+            starSize.push(0.02 + Math.random() * 0.04);
+            var fPick = Math.random();
+            if (fPick < 0.45) starColor.push(0.85, 0.93, 1.0);
+            else if (fPick < 0.8) starColor.push(0.55, 0.75, 1.0);
+            else starColor.push(1.0, 1.0, 1.0);
+            starRand.push(Math.random());
+            starAlpha.push(0.35 + Math.random() * 0.5);
+          }
+          var starfield = makeSystem(cloudVs, {
+            aPos: { values: new Float32Array(starPos), size: 3 },
+            aSize: { values: new Float32Array(starSize), size: 1 },
+            aColor: { values: new Float32Array(starColor), size: 3 },
+            aRand: { values: new Float32Array(starRand), size: 1 },
+            aAlpha: { values: new Float32Array(starAlpha), size: 1 }
+          }, sparkleTex);
+          if (!starfield) return null;
+
+          var systems = [starfield, strands, crown, cityBase, motes, glints];
 
           /* ---- Bloom pipeline (WebGL1, UNSIGNED_BYTE targets) ----
              Scene renders into an FBO; a separable 9-tap gaussian runs
              over two quarter-resolution targets (two iterations); a
-             composite pass adds scene + bloom * 1.15 to the screen. If
+             composite pass adds scene + bloom * uBloomStrength (driven by
+             the heartbeat) to the screen. If
              any target fails FRAMEBUFFER_COMPLETE, bloomOK stays false
              and rendering falls back to the direct-to-screen path. */
           var postVs = [
@@ -443,11 +510,12 @@
             'precision mediump float;',
             'uniform sampler2D uScene;',
             'uniform sampler2D uBloom;',
+            'uniform float uBloomStrength;',
             'varying vec2 vUv;',
             'void main(){',
             '  vec4 s = texture2D(uScene, vUv);',
             '  vec3 b = texture2D(uBloom, vUv).rgb;',
-            '  gl_FragColor = vec4(s.rgb + b * 1.15, s.a);',
+            '  gl_FragColor = vec4(s.rgb + b * uBloomStrength, s.a);',
             '}'
           ].join('\n');
           var blurProg = buildProgram(postVs, blurFs);
@@ -458,6 +526,7 @@
           var compAPos = compProg ? gl.getAttribLocation(compProg, 'aPos') : -1;
           var compUScene = compProg ? gl.getUniformLocation(compProg, 'uScene') : null;
           var compUBloom = compProg ? gl.getUniformLocation(compProg, 'uBloom') : null;
+          var compUBloomStrength = compProg ? gl.getUniformLocation(compProg, 'uBloomStrength') : null;
           var quadBuf = gl.createBuffer();
           gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
           gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -597,7 +666,7 @@
           }
           resize();
 
-          function drawSystem(sys, proj, view, phase, time, pointScale, breath, count) {
+          function drawSystem(sys, proj, view, phase, time, pointScale, breath, count, env, course) {
             gl.useProgram(sys.prog);
             gl.uniformMatrix4fv(sys.uProj, false, proj);
             gl.uniformMatrix4fv(sys.uView, false, view);
@@ -605,6 +674,8 @@
             if (sys.uTime) gl.uniform1f(sys.uTime, time);
             if (sys.uPointScale) gl.uniform1f(sys.uPointScale, pointScale);
             if (sys.uBreath) gl.uniform1f(sys.uBreath, breath);
+            if (sys.uEnv) gl.uniform1f(sys.uEnv, env);
+            if (sys.uCourse) gl.uniform2f(sys.uCourse, course[0], course[1]);
             if (sys.uTex) gl.uniform1i(sys.uTex, 0);
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, sys.tex);
@@ -617,15 +688,81 @@
             gl.drawArrays(gl.POINTS, 0, count);
             for (var j = 0; j < sys.attribs.length; j++) gl.disableVertexAttribArray(sys.attribs[j].loc);
           }
-          function drawAll(proj, view, phase, time, pointScale, breath) {
+          function drawAll(proj, view, phase, time, pointScale, breath, env, course) {
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
             for (var i = 0; i < systems.length; i++) {
               var sys = systems[i];
               var n = sys.count;
               if (tier >= 3 && sys.haloStart) n = sys.haloStart;
-              drawSystem(sys, proj, view, phase, time, pointScale, breath, n);
+              drawSystem(sys, proj, view, phase, time, pointScale, breath, n, env, course);
             }
+          }
+
+          /* Heartbeat: a lub-dub envelope with an irregular rhythm. Each
+             cycle (0.82s–1.18s, re-randomized per beat) opens with a
+             strong thump (amplitude 1.0, ~90ms decay) and a softer second
+             thump 24% in (amplitude .55, ~70ms decay), over a quiet
+             baseline of .12 plus a very slow faint breathing sine. The
+             envelope drives uBreath for every point system and the bloom
+             composite strength, so the whole core visibly beats. Each
+             strong thump also launches a coursing pulse down the strands;
+             two pulses run staggered on their own randomized schedules
+             (2.2s–3.4s crown -> city), idling parked off-strand between
+             runs. */
+          var hbStart = 0, hbCycle = 1000, hbFired = true;
+          var coursePulses = [
+            { active: false, start: 0, dur: 2800, idleUntil: -1 },
+            { active: false, start: 0, dur: 2800, idleUntil: -1 }
+          ];
+          var courseInit = false;
+          function startCourse(i, nowMs) {
+            var p = coursePulses[i];
+            p.active = true;
+            p.start = nowMs;
+            p.dur = 2200 + Math.random() * 1200;
+          }
+          function launchCourse(nowMs) {
+            for (var i = 0; i < coursePulses.length; i++) {
+              if (!coursePulses[i].active) { startCourse(i, nowMs); return; }
+            }
+          }
+          function heartbeat(nowMs) {
+            if (!hbStart) { hbStart = nowMs; hbCycle = 820 + Math.random() * 360; hbFired = false; }
+            var el = nowMs - hbStart;
+            if (el >= hbCycle) {
+              hbStart += hbCycle;
+              hbCycle = 820 + Math.random() * 360;
+              el = nowMs - hbStart;
+              hbFired = false;
+              if (el >= hbCycle) { hbStart = nowMs; el = 0; } /* slept tab: resync */
+            }
+            var env = 0.12 + 0.03 * Math.sin(nowMs * 0.001 * 0.5);
+            env += Math.exp(-el / 90);
+            var el2 = el - hbCycle * 0.24;
+            if (el2 > 0) env += 0.55 * Math.exp(-el2 / 70);
+            if (!hbFired && el < 120) { hbFired = true; launchCourse(nowMs); }
+            return env;
+          }
+          function coursePositions(nowMs) {
+            if (!courseInit) {
+              courseInit = true;
+              coursePulses[0].idleUntil = nowMs + 250;
+              coursePulses[1].idleUntil = nowMs + 1650;
+            }
+            var out = [-1, -1];
+            for (var i = 0; i < coursePulses.length; i++) {
+              var p = coursePulses[i];
+              if (p.active) {
+                var t = (nowMs - p.start) / p.dur;
+                if (t >= 1) { p.active = false; p.idleUntil = nowMs + 300 + Math.random() * 700; }
+                else out[i] = t;
+              } else if (p.idleUntil >= 0 && nowMs >= p.idleUntil) {
+                startCourse(i, nowMs);
+                out[i] = 0;
+              }
+            }
+            return out;
           }
 
           /* Camera orbits and descends in sync with the scroll position:
@@ -647,13 +784,20 @@
             var phase = display * 1.83;
             var time = now * 0.001;
             var pointScale = glCanvas.height / (2 * Math.tan(21 * Math.PI / 180));
-            var breath = 0.94 + 0.06 * Math.sin(time * 0.8);
-            if (bloomOK && tier < 3) {
+            var envelope = heartbeat(now);
+            var course = coursePositions(now);
+            var breath = 0.45 + 0.75 * envelope;
+            var bloomFactor = 0.8 + 0.9 * envelope;
+            var useBloom = bloomOK && tier < 3;
+            /* Direct path has no composite pass, so the heartbeat's bloom
+               swing is folded into breath instead — the thump still reads. */
+            var drawBreath = useBloom ? breath : breath * bloomFactor;
+            if (useBloom) {
               gl.bindFramebuffer(gl.FRAMEBUFFER, sceneT.fb);
               gl.viewport(0, 0, sceneT.w, sceneT.h);
               gl.clearColor(0, 0, 0, 0);
               gl.clear(gl.COLOR_BUFFER_BIT);
-              drawAll(proj, view, phase, time, pointScale, breath);
+              drawAll(proj, view, phase, time, pointScale, drawBreath, envelope, course);
               gl.disable(gl.BLEND);
               blurPass(sceneT.tex, blurA, 1, 0, sceneT.w, sceneT.h);
               blurPass(blurA.tex, blurB, 0, 1, blurA.w, blurA.h);
@@ -668,6 +812,7 @@
               gl.activeTexture(gl.TEXTURE1);
               gl.bindTexture(gl.TEXTURE_2D, blurB.tex);
               gl.uniform1i(compUBloom, 1);
+              if (compUBloomStrength) gl.uniform1f(compUBloomStrength, bloomFactor);
               drawQuad(compAPos);
               gl.activeTexture(gl.TEXTURE0);
             } else {
@@ -675,7 +820,7 @@
               gl.viewport(0, 0, glCanvas.width, glCanvas.height);
               gl.clearColor(0, 0, 0, 0);
               gl.clear(gl.COLOR_BUFFER_BIT);
-              drawAll(proj, view, phase, time, pointScale, breath);
+              drawAll(proj, view, phase, time, pointScale, drawBreath, envelope, course);
             }
           }
 
@@ -795,6 +940,17 @@
             requestAnimationFrame(fallbackFrame);
           }
         }
+        function smoothstep(x, a, b) {
+          var t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+          return t * t * (3 - 2 * t);
+        }
+        function drivePlate(img, opacity, scaleV, tyPct) {
+          if (!img) return;
+          var oStr = opacity.toFixed(3);
+          if (img._o !== oStr) { img._o = oStr; img.style.opacity = oStr; }
+          var tStr = 'translateY(' + tyPct.toFixed(2) + '%) scale(' + scaleV.toFixed(3) + ')';
+          if (img._t !== tStr) { img._t = tStr; img.style.transform = tStr; }
+        }
         function fallbackFrame(now) {
           if (!fallbackVisible || document.hidden) { fallbackRunning = false; return; }
           /* Time-based damping: the old per-frame lerp (display += delta*.15)
@@ -821,17 +977,20 @@
           var velocity = fallbackDisplay - before;
           fallbackRing.style.transform = 'none';
           var spineActive = !!(spine && spine.isActive());
-          if (cityImg && !spineActive) {
-            var cp = fallbackDisplay / (fallbackPanels.length - 1);
-            var ih = window.innerHeight;
-            var imgH = ih * 1.9;
-            var focal = 0.14 + cp * 0.72;
-            var ty = ih * 0.5 - focal * imgH;
-            var cStr = 'translate(-50%,' + ty.toFixed(1) + 'px) rotate(' + (-10 + cp * 20).toFixed(2) + 'deg) scale(' + (1.12 + cp * .18).toFixed(3) + ')';
-            var oStr2 = '50% ' + (focal * 100).toFixed(1) + '%';
-            if (cityImg._t !== cStr) { cityImg._t = cStr; cityImg.style.transform = cStr; }
-            if (cityImg._o !== oStr2) { cityImg._o = oStr2; cityImg.style.transformOrigin = oStr2; }
-          }
+          /* Plate stack driver: the three photoreal plates are the world
+             inside the central column and are ALWAYS visible (the spine
+             draws on top of them when GL is live; when it is not, the
+             plates carry the journey alone). Crossfades are smoothstep
+             windows over cp; every plate slowly pushes in (scale 1.06 ->
+             1.17) while its translateY drifts so the view feels like a
+             camera descending through the stack. */
+          var plateCp = Math.max(0, Math.min(1, fallbackDisplay / (fallbackPanels.length - 1)));
+          var fadeA = smoothstep(plateCp, .30, .52);
+          var fadeB = smoothstep(plateCp, .72, .90);
+          var plateScale = 1.06 + plateCp * .11;
+          drivePlate(plateTop, 1 - fadeA, plateScale, plateCp * -3.5);
+          drivePlate(plateDescent, fadeA * (1 - fadeB), plateScale, 1.5 - plateCp * 3);
+          drivePlate(plateSurface, fadeB, plateScale, 3.5 - plateCp * 3.5);
           if (spineActive) {
             /* In low-power mode the spine only re-renders when the scroll
                position has actually moved, so a weak GPU is never ground
