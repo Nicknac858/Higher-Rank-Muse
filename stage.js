@@ -171,8 +171,14 @@
           fallbackRing.style.transform = 'none';
           if (cityImg) {
             var cp = fallbackDisplay / (fallbackPanels.length - 1);
-            var cStr = 'translate(-50%,-50%) rotate(' + (-17 + cp * 34).toFixed(2) + 'deg) scale(' + (1.02 + cp * .1).toFixed(3) + ')';
+            var ih = window.innerHeight;
+            var imgH = ih * 1.9;
+            var focal = 0.14 + cp * 0.72;
+            var ty = ih * 0.5 - focal * imgH;
+            var cStr = 'translate(-50%,' + ty.toFixed(1) + 'px) rotate(' + (-10 + cp * 20).toFixed(2) + 'deg) scale(' + (1.12 + cp * .18).toFixed(3) + ')';
+            var oStr2 = '50% ' + (focal * 100).toFixed(1) + '%';
             if (cityImg._t !== cStr) { cityImg._t = cStr; cityImg.style.transform = cStr; }
+            if (cityImg._o !== oStr2) { cityImg._o = oStr2; cityImg.style.transformOrigin = oStr2; }
           }
           var nearest = Math.max(0,Math.min(fallbackPanels.length-1,Math.round(fallbackDisplay)));
           fallbackPanels.forEach(function(panel,index){
