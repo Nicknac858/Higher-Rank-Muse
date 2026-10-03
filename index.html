@@ -503,10 +503,11 @@
     .orbit-experience { display:none; position:relative; height:600vh; background:#000000; }
     .orbit-stage { position:sticky; top:0; height:100svh; min-height:680px; overflow:hidden; perspective:1600px; perspective-origin:50% 48%; isolation:isolate; }
     #orbit-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:0; }
-    #orbit-city { position:absolute; left:50%; top:0; height:190%; width:auto; max-width:none; pointer-events:none; user-select:none; opacity:.92; will-change:transform; z-index:1; -webkit-mask-image:radial-gradient(ellipse 88% 82% at 50% 50%, black 55%, transparent 97%); mask-image:radial-gradient(ellipse 88% 82% at 50% 50%, black 55%, transparent 97%); }
+    #orbit-plates { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(600px,88vw); height:150%; pointer-events:none; user-select:none; z-index:0; -webkit-mask-image:radial-gradient(ellipse 88% 82% at 50% 50%, black 55%, transparent 97%); mask-image:radial-gradient(ellipse 88% 82% at 50% 50%, black 55%, transparent 97%); }
+    .orbit-plate { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; user-select:none; opacity:0; will-change:transform,opacity; filter:brightness(.85) saturate(1.05); }
+    #plate-top { opacity:1; }
     #orbit-spine { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; display:none; }
     html.spine-on #orbit-spine { display:block; }
-    html.spine-on #orbit-city { display:none; }
     .orbit-stage::before { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background:radial-gradient(circle at 67% 48%,transparent 0 18%,rgba(0,0,0,.06) 31%,rgba(0,0,0,.62) 76%),linear-gradient(90deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.4) 44%,transparent 63%,rgba(0,0,0,.48) 100%); }
     .orbit-stage::after { content:""; position:absolute; inset:92px 38px 34px; z-index:2; pointer-events:none; border:1px solid transparent; border-radius:24px; box-shadow:none; }
     .stage-core { position:absolute; left:50%; top:49%; z-index:3; width:min(34vw,460px); aspect-ratio:1; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none; }
@@ -753,7 +754,11 @@
       <div class="orbit-stage">
         <canvas id="orbit-canvas" aria-hidden="true"></canvas>
         <canvas id="orbit-spine" aria-hidden="true"></canvas>
-        <img id="orbit-city" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-city-chunks="2" alt="" aria-hidden="true" draggable="false">
+        <div id="orbit-plates" aria-hidden="true">
+          <img class="orbit-plate" id="plate-top" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-chunks="2" alt="" draggable="false">
+          <img class="orbit-plate" id="plate-descent" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-chunks="3" alt="" draggable="false">
+          <img class="orbit-plate" id="plate-surface" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-chunks="3" alt="" draggable="false">
+        </div>
         <div class="stage-core" aria-hidden="true"><i class="stage-core-ring"></i><i class="stage-core-ring"></i><div class="stage-core-label"><strong>Clear direction</strong>Strategy in motion</div></div>
         <div class="orbit-scene">
           <div class="orbit-ring" id="orbit-ring">
@@ -1259,7 +1264,7 @@
   </script>
   <script src="stage.js"></script>
 <script>
-(function(){var img=document.getElementById('orbit-city');if(!img)return;var n=parseInt(img.getAttribute('data-city-chunks')||'0',10);if(!n)return;var parts=[],done=0;for(var i=0;i<n;i++){(function(k){fetch('city-'+k+'.txt').then(function(r){return r.text();}).then(function(t){parts[k]=t;done++;if(done===n){img.src='data:image/jpeg;base64,'+parts.join('');}}).catch(function(){});})(i);}})();
+(function(){var imgs=document.querySelectorAll('img[data-chunks]');imgs.forEach(function(img){var n=parseInt(img.getAttribute('data-chunks')||'0',10);if(!n||!img.id)return;var parts=[],done=0;for(var i=0;i<n;i++){(function(k){fetch(img.id+'-'+k+'.txt').then(function(r){return r.text();}).then(function(t){parts[k]=t;done++;if(done===n){img.src='data:image/jpeg;base64,'+parts.join('');}}).catch(function(){});})(i);}});})();
 </script>
 </body>
 </html>
